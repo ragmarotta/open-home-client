@@ -243,7 +243,7 @@ class TuyaBloc extends Bloc<TuyaEvent, TuyaState> {
         await _repository!.toggleDevice(event.deviceId, event.value);
         
         // Atualiza a lista interna localmente de forma otimizada
-        final updatedList = currentState.devices.map((device) {
+        final updatedList = currentState.devices.map<TuyaDeviceModel>((device) {
           if (device.id == event.deviceId) {
             final newStatus = Map<String, dynamic>.from(device.status);
             newStatus['switch'] = event.value;
@@ -253,6 +253,9 @@ class TuyaBloc extends Bloc<TuyaEvent, TuyaState> {
               category: device.category,
               isOnline: device.isOnline,
               status: newStatus,
+              iconUrl: device.iconUrl,
+              model: device.model,
+              productName: device.productName,
             );
           }
           return device;
@@ -276,7 +279,7 @@ class TuyaBloc extends Bloc<TuyaEvent, TuyaState> {
       try {
         await _repository!.setDeviceProperties(event.deviceId, event.code, event.value);
 
-        final updatedList = currentState.devices.map((device) {
+        final updatedList = currentState.devices.map<TuyaDeviceModel>((device) {
           if (device.id == event.deviceId) {
             final newStatus = Map<String, dynamic>.from(device.status);
             newStatus[event.code] = event.value;
@@ -286,6 +289,9 @@ class TuyaBloc extends Bloc<TuyaEvent, TuyaState> {
               category: device.category,
               isOnline: device.isOnline,
               status: newStatus,
+              iconUrl: device.iconUrl,
+              model: device.model,
+              productName: device.productName,
             );
           }
           return device;

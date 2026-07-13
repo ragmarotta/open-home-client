@@ -179,11 +179,11 @@ class _DashboardTabState extends State<DashboardTab> {
           // Tenta encontrar sensores de ar condicionado / clima
           final ac1 = tuyaState.devices.firstWhere(
             (d) => d.id == 'tuya_dev_ac1',
-            orElse: () => TuyaDeviceModel(id: '', name: '', category: '', isOnline: false, status: {}),
+            orElse: () => TuyaDeviceModel(id: '', name: '', category: '', isOnline: false, status: {}, iconUrl: '', model: '', productName: ''),
           );
           final ac2 = tuyaState.devices.firstWhere(
             (d) => d.id == 'tuya_dev_ac2',
-            orElse: () => TuyaDeviceModel(id: '', name: '', category: '', isOnline: false, status: {}),
+            orElse: () => TuyaDeviceModel(id: '', name: '', category: '', isOnline: false, status: {}, iconUrl: '', model: '', productName: ''),
           );
 
           if (ac1.id.isNotEmpty && ac1.status.containsKey('temp_current')) {
@@ -424,7 +424,13 @@ class _DashboardTabState extends State<DashboardTab> {
                   ? 'Iluminação'
                   : device.category == 'cl'
                       ? 'Cortina'
-                      : 'Plugue Inteligente';
+                      : device.category == 'vacuum'
+                          ? 'Aspirador de Pó Robotizado'
+                          : device.category == 'security'
+                              ? 'Fechadura Eletrônica'
+                              : device.category == 'sensor'
+                                  ? 'Sensor de Ambiente'
+                                  : 'Plugue Inteligente';
 
           final details = '$categoryDetails | Tuya';
           final icon = device.category == 'kt'
@@ -433,7 +439,13 @@ class _DashboardTabState extends State<DashboardTab> {
                   ? Icons.tungsten_outlined
                   : device.category == 'cl'
                       ? Icons.blinds_outlined
-                      : Icons.outlet_outlined;
+                      : device.category == 'vacuum'
+                          ? Icons.smart_toy_outlined
+                          : device.category == 'security'
+                              ? Icons.lock_outline
+                              : device.category == 'sensor'
+                                  ? Icons.thermostat_outlined
+                                  : Icons.outlet_outlined;
 
           final activeTextColor = isOn ? Colors.white : AppTheme.textPrimary;
           final activeSubtitleColor = isOn ? Colors.white70 : AppTheme.textMuted;

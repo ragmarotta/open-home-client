@@ -86,6 +86,12 @@ class RoomControlScreen extends StatelessWidget {
                     return _buildTuyaLightCard(context, dev, devName);
                   } else if (dev.category == 'cl') {
                     return _buildTuyaCurtainCard(context, dev, devName);
+                  } else if (dev.category == 'vacuum') {
+                    return _buildTuyaVacuumCard(context, dev, devName);
+                  } else if (dev.category == 'security') {
+                    return _buildTuyaSecurityCard(context, dev, devName);
+                  } else if (dev.category == 'sensor') {
+                    return _buildTuyaSensorCard(context, dev, devName);
                   } else {
                     return _buildTuyaSwitchCard(context, dev, devName);
                   }
@@ -213,6 +219,221 @@ class RoomControlScreen extends StatelessWidget {
                   context.read<TuyaBloc>().add(ToggleTuyaDevice(deviceId: dev.id, value: val));
                 },
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTuyaVacuumCard(BuildContext context, TuyaDeviceModel dev, String displayName) {
+    final bool isCleaning = dev.status['switch'] == true;
+    final activeColor = isCleaning ? AppTheme.accentCyan : AppTheme.textSecondary;
+    final modelName = dev.model.isNotEmpty ? dev.model : 'Robô Aspirador';
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      decoration: BoxDecoration(
+        color: isCleaning ? const Color(0xFF17242B) : AppTheme.inactiveCard,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isCleaning ? AppTheme.accentCyan.withOpacity(0.3) : Colors.white.withOpacity(0.04),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: isCleaning ? AppTheme.accentCyan.withOpacity(0.12) : Colors.white.withOpacity(0.03),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.smart_toy_outlined, color: activeColor, size: 26),
+                ),
+                const SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      displayName,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                    Text(
+                      '$modelName | ${dev.productName.isNotEmpty ? dev.productName : 'Tuya Smart'}',
+                      style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            Transform.scale(
+              scale: 0.95,
+              child: Switch(
+                value: isCleaning,
+                onChanged: (val) {
+                  context.read<TuyaBloc>().add(ToggleTuyaDevice(deviceId: dev.id, value: val));
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTuyaSecurityCard(BuildContext context, TuyaDeviceModel dev, String displayName) {
+    final bool isLocked = dev.status['switch'] == true;
+    final activeColor = isLocked ? AppTheme.accentCyan : Colors.redAccent;
+    final modelName = dev.model.isNotEmpty ? dev.model : 'Fechadura';
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      decoration: BoxDecoration(
+        color: isLocked ? const Color(0xFF13221C) : const Color(0xFF241519),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isLocked ? AppTheme.accentCyan.withOpacity(0.3) : Colors.redAccent.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: isLocked ? AppTheme.accentCyan.withOpacity(0.12) : Colors.redAccent.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isLocked ? Icons.lock_outlined : Icons.lock_open_outlined,
+                    color: activeColor,
+                    size: 26,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      displayName,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                    Text(
+                      isLocked ? 'Trancada | $modelName' : 'Destrancada | $modelName',
+                      style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            Transform.scale(
+              scale: 0.95,
+              child: Switch(
+                value: isLocked,
+                activeColor: AppTheme.accentCyan,
+                activeTrackColor: AppTheme.accentCyan.withOpacity(0.5),
+                inactiveThumbColor: Colors.redAccent,
+                inactiveTrackColor: Colors.redAccent.withOpacity(0.2),
+                onChanged: (val) {
+                  context.read<TuyaBloc>().add(ToggleTuyaDevice(deviceId: dev.id, value: val));
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTuyaSensorCard(BuildContext context, TuyaDeviceModel dev, String displayName) {
+    final double? temp = (dev.status['temp_current'] as num?)?.toDouble();
+    final double? humidity = (dev.status['humidity'] as num?)?.toDouble();
+    final modelName = dev.model.isNotEmpty ? dev.model : 'Sensor';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.inactiveCard,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.04),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.03),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.thermostat_outlined, color: AppTheme.accentCyan, size: 26),
+                ),
+                const SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      displayName,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                    Text(
+                      '$modelName | ${dev.productName.isNotEmpty ? dev.productName : 'Tuya Sensor'}',
+                      style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                if (temp != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentCyan.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${temp.toStringAsFixed(1)}°C',
+                      style: const TextStyle(color: AppTheme.accentCyan, fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ),
+                if (temp != null && humidity != null) const SizedBox(width: 8),
+                if (humidity != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentIndigo.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${humidity.toStringAsFixed(0)}%',
+                      style: const TextStyle(color: AppTheme.accentIndigo, fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ),
+                if (temp == null && humidity == null)
+                  const Text('Ativo', style: TextStyle(color: Colors.greenAccent, fontSize: 13, fontWeight: FontWeight.bold)),
+              ],
             ),
           ],
         ),
