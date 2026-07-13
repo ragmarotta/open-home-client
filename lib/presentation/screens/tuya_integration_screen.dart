@@ -50,9 +50,9 @@ class _TuyaIntegrationScreenState extends State<TuyaIntegrationScreen> {
     }
   }
 
-  /// Abre o portal Tuya IoT no navegador do dispositivo de forma segura.
+  /// Abre o portal Tuya Platform no navegador do dispositivo de forma segura.
   Future<void> _launchTuyaIotPortal() async {
-    final Uri url = Uri.parse('https://iot.tuya.com/');
+    final Uri url = Uri.parse('https://platform.tuya.com/');
     try {
       if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
         throw Exception('Could not launch $url');
@@ -62,7 +62,7 @@ class _TuyaIntegrationScreenState extends State<TuyaIntegrationScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Não foi possível abrir o navegador. Visite https://iot.tuya.com/'),
+            content: Text('Não foi possível abrir o navegador. Visite https://platform.tuya.com/'),
             backgroundColor: AppTheme.warningAmber,
           ),
         );
@@ -356,7 +356,7 @@ class _TuyaIntegrationScreenState extends State<TuyaIntegrationScreen> {
             ],
           ),
           const SizedBox(height: 18),
-          _buildInstructionStep('1', 'Crie uma conta no portal Tuya IoT.'),
+          _buildInstructionStep('1', 'Crie uma conta no portal Tuya Platform (platform.tuya.com).'),
           const Divider(color: Colors.white10, height: 20, indent: 32),
           _buildInstructionStep('2', 'Vá em Cloud > Development e crie um projeto Smart Home.'),
           const Divider(color: Colors.white10, height: 20, indent: 32),
