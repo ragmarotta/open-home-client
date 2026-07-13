@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/localization/app_localizations.dart';
 import '../blocs/device/device_bloc.dart';
 import '../../domain/entities/smart_device.dart';
 
+/// Tela de Controle de Cômodo Individual.
+/// 
+/// Apresenta e centraliza todos os controles específicos dos dispositivos de
+/// uma determinada sala (ex: Living Room). Combina interruptores Tasmota,
+/// plugs inteligentes Tuya e fitas LED NodeMCU sob uma interface unificada.
 class RoomControlScreen extends StatelessWidget {
   final String roomName;
 
@@ -12,7 +18,7 @@ class RoomControlScreen extends StatelessWidget {
     required this.roomName,
   });
 
-  // A list of premium curated colors for the NodeMCU LED Strip
+  /// Lista de cores selecionadas para controle da fita LED.
   static const List<Map<String, dynamic>> _curatedColors = [
     {'name': 'Indigo', 'value': 0xFF6366F1},
     {'name': 'Cyan', 'value': 0xFF22D3EE},
@@ -25,9 +31,18 @@ class RoomControlScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Mapeia o nome do cômodo para a sua tradução localizada
+    final displayName = roomName == 'Living Room'
+        ? context.translate('living_room')
+        : roomName == 'Kitchen'
+            ? context.translate('kitchen')
+            : roomName == 'Master Bedroom'
+                ? context.translate('bedroom')
+                : context.translate('office');
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(roomName),
+        title: Text(displayName),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -43,14 +58,14 @@ class RoomControlScreen extends StatelessWidget {
           if (state is DeviceError) {
             return Center(
               child: Text(
-                'Error: ${state.message}',
+                '${context.translate('error')}: ${state.message}',
                 style: const TextStyle(color: AppTheme.warningAmber),
               ),
             );
           }
 
           if (state is DeviceLoaded) {
-            // Filter devices that belong to this room
+            // Filtra os dispositivos da sala correspondente (ignora diferenças de maiúsculas)
             final roomDevices = state.devices
                 .where((d) => d.room.toLowerCase() == roomName.toLowerCase())
                 .toList();
@@ -63,7 +78,7 @@ class RoomControlScreen extends StatelessWidget {
                     const Icon(Icons.devices_other, size: 64, color: AppTheme.textSecondary),
                     const SizedBox(height: 16),
                     Text(
-                      'No devices configured in $roomName.',
+                      'No devices configured in $displayName.',
                       style: const TextStyle(color: AppTheme.textSecondary),
                     ),
                   ],
@@ -90,7 +105,7 @@ class RoomControlScreen extends StatelessWidget {
                     },
                   ),
                 ),
-                // Preset Scenes at the bottom
+                // Rodapé de Ações Rápidas de Cena (Cenas Pré-definidas)
                 _buildPresetScenesSection(context),
               ],
             );
@@ -102,6 +117,7 @@ class RoomControlScreen extends StatelessWidget {
     );
   }
 
+  /// Constrói o card de controle para tomadas Tuya ou interruptores Tasmota.
   Widget _buildSwitchControlCard(BuildContext context, SmartSwitch device) {
     final isTasmota = device.brand.toLowerCase().contains("tasmota");
     final activeColor = device.isOn ? AppTheme.accentCyan : AppTheme.textSecondary;
@@ -141,7 +157,9 @@ class RoomControlScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      isTasmota ? 'Tasmota Smart Switch' : 'Tuya Zigbee Smart Plug',
+                      isTasmota
+                          ? context.translate('tasmota_switch')
+                          : context.translate('tuya_plug'),
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppTheme.textSecondary,
@@ -153,7 +171,7 @@ class RoomControlScreen extends StatelessWidget {
             ),
             SizedBox(
               width: 64,
-              height: 48, // Touch target
+              height: 48,
               child: Switch(
                 value: device.isOn,
                 onChanged: (_) {
@@ -167,6 +185,7 @@ class RoomControlScreen extends StatelessWidget {
     );
   }
 
+  /// Constrói o card de controle estendido para Fitas LED NodeMCU (controle de brilho e cores).
   Widget _buildLightControlCard(BuildContext context, SmartLight device) {
     return Card(
       child: Padding(
@@ -174,7 +193,6 @@ class RoomControlScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title and Main Switch Row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -207,7 +225,7 @@ class RoomControlScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'NodeMCU RGB LED Strip (${device.brand})',
+                          context.translate('nodemcu_strip'),
                           style: const TextStyle(
                             fontSize: 12,
                             color: AppTheme.textSecondary,
@@ -231,11 +249,11 @@ class RoomControlScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Brightness Slider Section
+            // Controles de dimmer e cor ativos apenas se o dispositivo estiver ligado
             if (device.isOn) ...[
-              const Text(
-                'Brightness',
-                style: TextStyle(
+              Text(
+                context.translate('dim'),
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: AppTheme.textPrimary,
@@ -270,10 +288,9 @@ class RoomControlScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // Color Picker Section
-              const Text(
-                'Color Palette',
-                style: TextStyle(
+              Text(
+                context.translate('color_palette'),
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: AppTheme.textPrimary,
@@ -299,7 +316,7 @@ class RoomControlScreen extends StatelessWidget {
                             );
                       },
                       child: Container(
-                        width: 48, // Standard touch target width
+                        width: 48,
                         height: 48,
                         decoration: BoxDecoration(
                           color: Color(colorValue),
@@ -337,6 +354,7 @@ class RoomControlScreen extends StatelessWidget {
     );
   }
 
+  /// Constrói o rodapé contendo os botões de ações rápidas de Cenas (Modo Filme / Leitura).
   Widget _buildPresetScenesSection(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16.0),
@@ -354,9 +372,9 @@ class RoomControlScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Preset Scenes Quick Actions',
-            style: TextStyle(
+          Text(
+            context.translate('quick_scenes'),
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
               color: AppTheme.textPrimary,
@@ -365,9 +383,10 @@ class RoomControlScreen extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
+              // Botão Modo Filme
               Expanded(
                 child: SizedBox(
-                  height: 52, // Standard touch target
+                  height: 52,
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.accentIndigo.withOpacity(0.15),
@@ -381,24 +400,25 @@ class RoomControlScreen extends StatelessWidget {
                     onPressed: () {
                       context.read<DeviceBloc>().add(const TriggerPresetSceneEvent("Movie Mode"));
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Applying Scene: Movie Mode..."),
-                          duration: Duration(seconds: 1),
+                        SnackBar(
+                          content: Text(context.translate('applying_scene')),
+                          duration: const Duration(seconds: 1),
                         ),
                       );
                     },
                     icon: const Icon(Icons.movie_outlined),
-                    label: const Text(
-                      'Movie Mode',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    label: Text(
+                      context.translate('movie_mode'),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
               ),
               const SizedBox(width: 12),
+              // Botão Modo Leitura
               Expanded(
                 child: SizedBox(
-                  height: 52, // Standard touch target
+                  height: 52,
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.accentCyan.withOpacity(0.15),
@@ -412,16 +432,16 @@ class RoomControlScreen extends StatelessWidget {
                     onPressed: () {
                       context.read<DeviceBloc>().add(const TriggerPresetSceneEvent("Reading"));
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Applying Scene: Reading..."),
-                          duration: Duration(seconds: 1),
+                        SnackBar(
+                          content: Text(context.translate('applying_scene')),
+                          duration: const Duration(seconds: 1),
                         ),
                       );
                     },
                     icon: const Icon(Icons.menu_book_outlined),
-                    label: const Text(
-                      'Reading',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    label: Text(
+                      context.translate('reading'),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),

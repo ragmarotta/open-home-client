@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/localization/app_localizations.dart';
 import '../blocs/device/device_bloc.dart';
 import '../blocs/climate/climate_bloc.dart';
 import '../../domain/entities/smart_device.dart';
 import 'room_control_screen.dart';
+import 'settings_screen.dart';
 
+/// Guia de Painel de Controle (Dashboard).
+/// 
+/// Apresenta o status térmico geral da casa, controle de andares e um grid
+/// contendo os dispositivos ativos e salas disponíveis no andar selecionado.
 class DashboardTab extends StatefulWidget {
   const DashboardTab({super.key});
 
@@ -14,16 +20,18 @@ class DashboardTab extends StatefulWidget {
 }
 
 class _DashboardTabState extends State<DashboardTab> {
+  // Controle de andar atualmente selecionado (1 para Térreo, 2 para Superior)
   int _selectedFloor = 1;
 
   @override
   void initState() {
     super.initState();
-    // Load initial devices for the floor and climate details
+    // Dispara a carga de dispositivos e dados climáticos ao iniciar
     context.read<DeviceBloc>().add(LoadDevices(_selectedFloor));
     context.read<ClimateBloc>().add(LoadClimate());
   }
 
+  /// Gerencia a troca de andar e recarrega os dispositivos correspondentes.
   void _onFloorChanged(int floor) {
     setState(() {
       _selectedFloor = floor;
@@ -39,33 +47,52 @@ class _DashboardTabState extends State<DashboardTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header title
-          Text(
-            'Smart Dashboard',
-            style: Theme.of(context).textTheme.headlineMedium,
+          // Título do Painel com botão de configurações
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                context.translate('dashboard'),
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              // Botão de Configurações de Toque Grande (>=48dp)
+              IconButton(
+                padding: const EdgeInsets.all(12),
+                iconSize: 26,
+                icon: const Icon(Icons.settings_outlined, color: AppTheme.accentCyan),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsScreen(),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
           const SizedBox(height: 16),
 
-          // Home Thermal Status Card (Floor 1 & Floor 2)
+          // Card de Status Térmico Geral da Casa
           _buildThermalStatusCard(),
           const SizedBox(height: 20),
 
-          // Segmented Button to Toggle Floors
+          // Botões Segmentados para alternar entre os andares (Térreo / Superior)
           Center(
             child: SizedBox(
               width: double.infinity,
-              height: 48, // Min touch target height
+              height: 48,
               child: SegmentedButton<int>(
-                segments: const <ButtonSegment<int>>[
+                segments: <ButtonSegment<int>>[
                   ButtonSegment<int>(
                     value: 1,
-                    label: Text('FLOOR 1 (Ground)'),
-                    icon: Icon(Icons.home_outlined),
+                    label: Text(context.translate('floor_1')),
+                    icon: const Icon(Icons.home_outlined),
                   ),
                   ButtonSegment<int>(
                     value: 2,
-                    label: Text('FLOOR 2 (Upper)'),
-                    icon: Icon(Icons.apartment_outlined),
+                    label: Text(context.translate('floor_2')),
+                    icon: const Icon(Icons.apartment_outlined),
                   ),
                 ],
                 selected: {_selectedFloor},
@@ -77,25 +104,25 @@ class _DashboardTabState extends State<DashboardTab> {
           ),
           const SizedBox(height: 24),
 
-          // Section Title: Rooms
+          // Seção de Cômodos do Andar Atual
           Text(
-            'Rooms',
+            context.translate('rooms'),
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 12),
 
-          // Horizontal list of rooms on this floor
+          // Carrossel Horizontal de Cômodos
           _buildRoomsHorizontalList(),
           const SizedBox(height: 24),
 
-          // Section Title: Active Devices
+          // Seção de Dispositivos Rápidos do Andar
           Text(
-            'Active Devices',
+            context.translate('active_devices'),
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 12),
 
-          // Device Grid
+          // Grid de cards de dispositivos ativos
           _buildDevicesGrid(),
           const SizedBox(height: 20),
         ],
@@ -103,6 +130,7 @@ class _DashboardTabState extends State<DashboardTab> {
     );
   }
 
+  /// Constrói o painel térmico geral, recuperando as temperaturas via ClimateBloc.
   Widget _buildThermalStatusCard() {
     return BlocBuilder<ClimateBloc, ClimateState>(
       builder: (context, state) {
@@ -126,7 +154,7 @@ class _DashboardTabState extends State<DashboardTab> {
                     const Icon(Icons.thermostat, color: AppTheme.accentCyan),
                     const SizedBox(width: 8),
                     Text(
-                      'Home Thermal Status',
+                      context.translate('thermal_status'),
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             color: AppTheme.textPrimary,
                           ),
@@ -147,7 +175,7 @@ class _DashboardTabState extends State<DashboardTab> {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    // Floor 1 Status
+                    // Status Térmico do Andar 1
                     Expanded(
                       child: Container(
                         padding: const EdgeInsets.all(12),
@@ -159,13 +187,15 @@ class _DashboardTabState extends State<DashboardTab> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Floor 1',
-                              style: TextStyle(
-                                fontSize: 12,
+                            Text(
+                              context.translate('floor_1'),
+                              style: const TextStyle(
+                                fontSize: 11,
                                 color: AppTheme.textSecondary,
                                 fontWeight: FontWeight.w600,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 4),
                             Row(
@@ -179,21 +209,26 @@ class _DashboardTabState extends State<DashboardTab> {
                                   ),
                                 ),
                                 const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: const Text(
-                                    'Comfortable',
-                                    style: TextStyle(
-                                      color: Colors.greenAccent,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      context.translate('comfortable'),
+                                      style: const TextStyle(
+                                        color: Colors.greenAccent,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ),
@@ -204,7 +239,7 @@ class _DashboardTabState extends State<DashboardTab> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    // Floor 2 Status
+                    // Status Térmico do Andar 2
                     Expanded(
                       child: Container(
                         padding: const EdgeInsets.all(12),
@@ -216,13 +251,15 @@ class _DashboardTabState extends State<DashboardTab> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Floor 2',
-                              style: TextStyle(
-                                fontSize: 12,
+                            Text(
+                              context.translate('floor_2'),
+                              style: const TextStyle(
+                                fontSize: 11,
                                 color: AppTheme.textSecondary,
                                 fontWeight: FontWeight.w600,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 4),
                             Row(
@@ -236,26 +273,27 @@ class _DashboardTabState extends State<DashboardTab> {
                                   ),
                                 ),
                                 const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.warningAmber.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: const Row(
-                                    children: [
-                                      Text(
-                                        'Warm ⚠️',
-                                        style: TextStyle(
-                                          color: AppTheme.warningAmber,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.warningAmber.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      '${context.translate('warm')} ⚠️',
+                                      style: const TextStyle(
+                                        color: AppTheme.warningAmber,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
                                       ),
-                                    ],
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -274,6 +312,7 @@ class _DashboardTabState extends State<DashboardTab> {
     );
   }
 
+  /// Constrói o carrossel horizontal contendo as salas disponíveis no andar atual.
   Widget _buildRoomsHorizontalList() {
     final floorRooms = _selectedFloor == 1
         ? ['Living Room', 'Kitchen']
@@ -288,6 +327,15 @@ class _DashboardTabState extends State<DashboardTab> {
         separatorBuilder: (context, index) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
           final roomName = floorRooms[index];
+          // Mapeia chaves de salas para suas respectivas traduções do arquivo de idioma
+          final displayName = roomName == 'Living Room'
+              ? context.translate('living_room')
+              : roomName == 'Kitchen'
+                  ? context.translate('kitchen')
+                  : roomName == 'Master Bedroom'
+                      ? context.translate('bedroom')
+                      : context.translate('office');
+
           return InkWell(
             onTap: () {
               Navigator.push(
@@ -322,7 +370,7 @@ class _DashboardTabState extends State<DashboardTab> {
                     size: 28,
                   ),
                   Text(
-                    roomName,
+                    displayName,
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textPrimary,
@@ -338,6 +386,7 @@ class _DashboardTabState extends State<DashboardTab> {
     );
   }
 
+  /// Constrói o grid contendo todos os dispositivos ativos cadastrados no andar.
   Widget _buildDevicesGrid() {
     return BlocBuilder<DeviceBloc, DeviceState>(
       builder: (context, state) {
@@ -353,7 +402,7 @@ class _DashboardTabState extends State<DashboardTab> {
         if (state is DeviceError) {
           return Center(
             child: Text(
-              'Error: ${state.message}',
+              '${context.translate('error')}: ${state.message}',
               style: const TextStyle(color: AppTheme.warningAmber),
             ),
           );
@@ -362,10 +411,10 @@ class _DashboardTabState extends State<DashboardTab> {
         if (state is DeviceLoaded) {
           final devices = state.devices;
           if (devices.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
-                'No devices on this floor.',
-                style: TextStyle(color: AppTheme.textSecondary),
+                context.translate('no_devices'),
+                style: const TextStyle(color: AppTheme.textSecondary),
               ),
             );
           }
@@ -394,7 +443,7 @@ class _DashboardTabState extends State<DashboardTab> {
                     : Icons.light_outlined;
               } else if (device is SmartLight) {
                 isOn = device.isOn;
-                details = "${(device.brightness * 100).toStringAsFixed(0)}% Dim | ${device.brand}";
+                details = "${(device.brightness * 100).toStringAsFixed(0)}% ${context.translate('dim')} | ${device.brand}";
                 icon = Icons.tungsten;
               }
 
@@ -403,11 +452,11 @@ class _DashboardTabState extends State<DashboardTab> {
               return Card(
                 child: InkWell(
                   onTap: () {
-                    // Quick Toggle
+                    // Alternação rápida de On/Off de um dispositivo
                     context.read<DeviceBloc>().add(ToggleDeviceEvent(device.id));
                   },
                   onLongPress: () {
-                    // Navigate to Room details of this device
+                    // Ao segurar, navega para a tela de controle detalhado do cômodo correspondente
                     Navigator.push(
                       context,
                       MaterialPageRoute(

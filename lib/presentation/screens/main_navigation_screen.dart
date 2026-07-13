@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import '../../core/localization/app_localizations.dart';
 import 'dashboard_tab.dart';
 import 'audio_central_tab.dart';
 import 'climate_tab.dart';
 import 'energy_presence_tab.dart';
 
+/// Widget de Navegação Principal do aplicativo (Base do Scaffold).
+/// 
+/// Gerencia a barra de navegação inferior (sticky) e renderiza as guias (tabs)
+/// usando [IndexedStack] para preservar o estado de scroll e dados de cada aba.
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
 
@@ -12,8 +17,10 @@ class MainNavigationScreen extends StatefulWidget {
 }
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
+  // Índice da aba atualmente selecionada.
   int _currentIndex = 0;
 
+  // Lista estática com os widgets correspondentes a cada aba de conteúdo.
   final List<Widget> _tabs = const [
     DashboardTab(),
     AudioCentralTab(),
@@ -43,26 +50,30 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               _currentIndex = index;
             });
           },
-          items: const [
+          items: [
+            // Aba Cômodos / Rooms
             BottomNavigationBarItem(
-              icon: Icon(Icons.meeting_room_outlined),
-              activeIcon: Icon(Icons.meeting_room),
-              label: 'Rooms',
+              icon: const Icon(Icons.meeting_room_outlined),
+              activeIcon: const Icon(Icons.meeting_room),
+              label: context.translate('rooms'),
             ),
+            // Aba Mídia / Media
             BottomNavigationBarItem(
-              icon: Icon(Icons.audiotrack_outlined),
-              activeIcon: Icon(Icons.audiotrack),
-              label: 'Media',
+              icon: const Icon(Icons.audiotrack_outlined),
+              activeIcon: const Icon(Icons.audiotrack),
+              label: context.translate('media'),
             ),
+            // Aba Clima / Climate
             BottomNavigationBarItem(
-              icon: Icon(Icons.thermostat_outlined),
-              activeIcon: Icon(Icons.thermostat),
-              label: 'Climate',
+              icon: const Icon(Icons.thermostat_outlined),
+              activeIcon: const Icon(Icons.thermostat),
+              label: context.translate('climate'),
             ),
+            // Aba Segurança / Security
             BottomNavigationBarItem(
-              icon: Icon(Icons.security_outlined),
-              activeIcon: Icon(Icons.security),
-              label: 'Security',
+              icon: const Icon(Icons.security_outlined),
+              activeIcon: const Icon(Icons.security),
+              label: context.translate('security'),
             ),
           ],
         ),

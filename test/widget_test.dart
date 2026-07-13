@@ -29,7 +29,7 @@ void main() {
     // Note: Since dashboard has loading states, we may need to pump to trigger the BLoC loaded state.
     await tester.pumpAndSettle();
 
-    expect(find.text('Smart Dashboard'), findsOneWidget);
+    expect(find.text('Painel Inteligente'), findsOneWidget);
     expect(find.byIcon(Icons.meeting_room), findsOneWidget);
   });
 }

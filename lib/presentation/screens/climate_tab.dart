@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/localization/app_localizations.dart';
 import '../blocs/climate/climate_bloc.dart';
 import '../../domain/entities/climate_device.dart';
 
+/// Guia Central de Clima (Climate Central).
+/// 
+/// Apresenta o estado dos aparelhos de ar-condicionado central ou bombas de
+/// calor da residência, permitindo ligar/desligar, alterar a temperatura alvo
+/// com botões incrementais táteis (+/-) e alternar os modos do sistema (Cool, Heat, Fan).
 class ClimateTab extends StatefulWidget {
   const ClimateTab({super.key});
 
@@ -15,6 +21,7 @@ class _ClimateTabState extends State<ClimateTab> {
   @override
   void initState() {
     super.initState();
+    // Carrega o estado inicial do Clima
     context.read<ClimateBloc>().add(LoadClimate());
   }
 
@@ -31,7 +38,7 @@ class _ClimateTabState extends State<ClimateTab> {
         if (state is ClimateError) {
           return Center(
             child: Text(
-              'Error: ${state.message}',
+              '${context.translate('error')}: ${state.message}',
               style: const TextStyle(color: AppTheme.warningAmber),
             ),
           );
@@ -46,14 +53,14 @@ class _ClimateTabState extends State<ClimateTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title
+                // Título
                 Text(
-                  'Climate Central',
+                  context.translate('climate'),
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 16),
 
-                // Floor summary
+                // Lista de termostatos
                 _buildThermostatsList(context, climates),
               ],
             ),
@@ -65,6 +72,7 @@ class _ClimateTabState extends State<ClimateTab> {
     );
   }
 
+  /// Constrói a lista contendo as placas de controle de termostatos.
   Widget _buildThermostatsList(BuildContext context, List<ClimateDevice> climates) {
     return Column(
       children: climates.map((climate) {
@@ -75,7 +83,7 @@ class _ClimateTabState extends State<ClimateTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Row: Info & On/Off
+                // Linha superior: Nome e Botão Liga/Desliga
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -116,14 +124,14 @@ class _ClimateTabState extends State<ClimateTab> {
                 ),
                 const Divider(color: Color(0xFF202638), height: 32),
 
+                // Exibe controles do termostato apenas se estiver ligado
                 if (climate.isOn) ...[
-                  // Thermostat Controls
                   Center(
                     child: Column(
                       children: [
-                        const Text(
-                          'Target Temperature',
-                          style: TextStyle(
+                        Text(
+                          context.translate('target_temp'),
+                          style: const TextStyle(
                             fontSize: 13,
                             color: AppTheme.textSecondary,
                             fontWeight: FontWeight.w600,
@@ -133,7 +141,7 @@ class _ClimateTabState extends State<ClimateTab> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // Minus button (>=48dp touch target)
+                            // Botão Menos (-) com clique otimizado
                             _buildTempActionButton(
                               icon: Icons.remove,
                               onPressed: () {
@@ -146,7 +154,7 @@ class _ClimateTabState extends State<ClimateTab> {
                               },
                             ),
                             const SizedBox(width: 24),
-                            // Current reading display
+                            // Exibição da temperatura
                             Column(
                               children: [
                                 Text(
@@ -160,7 +168,7 @@ class _ClimateTabState extends State<ClimateTab> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  'Current: ${climate.currentTemperature.toStringAsFixed(0)}°C',
+                                  '${context.translate('current_temp')}: ${climate.currentTemperature.toStringAsFixed(0)}°C',
                                   style: const TextStyle(
                                     fontSize: 12,
                                     color: AppTheme.textSecondary,
@@ -169,7 +177,7 @@ class _ClimateTabState extends State<ClimateTab> {
                               ],
                             ),
                             const SizedBox(width: 24),
-                            // Plus button
+                            // Botão Mais (+) com clique otimizado
                             _buildTempActionButton(
                               icon: Icons.add,
                               onPressed: () {
@@ -188,10 +196,10 @@ class _ClimateTabState extends State<ClimateTab> {
                   ),
                   const SizedBox(height: 28),
 
-                  // Mode Segmented Control
-                  const Text(
-                    'System Mode',
-                    style: TextStyle(
+                  // Seletor de Modo (COOL, HEAT, FAN)
+                  Text(
+                    context.translate('system_mode'),
+                    style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textSecondary,
@@ -231,12 +239,13 @@ class _ClimateTabState extends State<ClimateTab> {
                     ),
                   ),
                 ] else ...[
-                  const Center(
+                  // Exibição quando desligado
+                  Center(
                     child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 24.0),
+                      padding: const EdgeInsets.symmetric(vertical: 24.0),
                       child: Text(
-                        'Thermostat is turned off.',
-                        style: TextStyle(
+                        context.translate('thermostat_off'),
+                        style: const TextStyle(
                           color: AppTheme.textSecondary,
                           fontStyle: FontStyle.italic,
                         ),
@@ -252,6 +261,7 @@ class _ClimateTabState extends State<ClimateTab> {
     );
   }
 
+  /// Constrói botões circulares táteis de ajuste de temperatura (+/-).
   Widget _buildTempActionButton({required IconData icon, required VoidCallback onPressed}) {
     return Material(
       color: const Color(0xFF202638),
@@ -260,7 +270,7 @@ class _ClimateTabState extends State<ClimateTab> {
         onTap: onPressed,
         customBorder: const CircleBorder(),
         child: Container(
-          width: 56, // >= 48dp
+          width: 56,
           height: 56,
           alignment: Alignment.center,
           child: Icon(icon, color: Colors.white, size: 24),

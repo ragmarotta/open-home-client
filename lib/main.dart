@@ -1,34 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
-// Theme
+// Tema
 import 'core/theme/app_theme.dart';
 
-// Repositories
+// Localização
+import 'core/localization/app_localizations.dart';
+
+// Repositórios
 import 'domain/repositories/device_repository.dart';
 import 'domain/repositories/climate_repository.dart';
 import 'domain/repositories/audio_repository.dart';
 import 'domain/repositories/monitoring_repository.dart';
 
-// Mock Repositories
+// Repositórios Mock (Dados Simulados)
 import 'data/repositories/mock_device_repository.dart';
 import 'data/repositories/mock_climate_repository.dart';
 import 'data/repositories/mock_audio_repository.dart';
 import 'data/repositories/mock_monitoring_repository.dart';
 
-// Blocs
+// Gerenciadores de Estado (BLoCs)
 import 'presentation/blocs/device/device_bloc.dart';
 import 'presentation/blocs/climate/climate_bloc.dart';
 import 'presentation/blocs/audio/audio_bloc.dart';
 import 'presentation/blocs/monitoring/monitoring_bloc.dart';
+import 'presentation/blocs/settings/settings_bloc.dart';
 
-// Screens
+// Telas Principais
 import 'presentation/screens/main_navigation_screen.dart';
 
+/// Função principal que inicializa os serviços básicos do Flutter e inicia o app.
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Instantiate Mock Repositories
+  // Instanciação das implementações de dados locais mockados.
   final deviceRepository = MockDeviceRepository();
   final climateRepository = MockClimateRepository();
   final audioRepository = MockAudioRepository();
@@ -44,6 +50,10 @@ void main() {
   );
 }
 
+/// Widget raiz do aplicativo Open Home.
+/// 
+/// Realiza a injeção global de dependências através do `MultiRepositoryProvider`
+/// e do `MultiBlocProvider`, além de gerenciar a inicialização do tema e do idioma.
 class OpenHomeApp extends StatelessWidget {
   final DeviceRepository deviceRepository;
   final ClimateRepository climateRepository;
@@ -81,12 +91,30 @@ class OpenHomeApp extends StatelessWidget {
           BlocProvider<MonitoringBloc>(
             create: (context) => MonitoringBloc(monitoringRepository),
           ),
+          BlocProvider<SettingsBloc>(
+            create: (context) => SettingsBloc()..add(LoadSettingsEvent()),
+          ),
         ],
-        child: MaterialApp(
-          title: 'Open Home',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.darkTheme,
-          home: const MainNavigationScreen(),
+        child: BlocBuilder<SettingsBloc, SettingsState>(
+          builder: (context, settingsState) {
+            return MaterialApp(
+              title: 'Open Home',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.darkTheme,
+              locale: settingsState.locale,
+              supportedLocales: const [
+                Locale('pt'),
+                Locale('en'),
+              ],
+              localizationsDelegates: const [
+                AppLocalizationsDelegate(),
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              home: const MainNavigationScreen(),
+            );
+          },
         ),
       ),
     );

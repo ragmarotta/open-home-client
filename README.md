@@ -13,6 +13,7 @@ O ecossistema do aplicativo foi projetado com as seguintes tecnologias e pacotes
 *   **Flutter & Dart**: Framework e linguagem de desenvolvimento multiuso e reativo.
 *   **Flutter BLoC (`flutter_bloc`)**: Utilizado para gerenciar o estado da aplicação de forma previsível e isolada da lógica de negócios.
 *   **Equatable (`equatable`)**: Facilita a comparação de objetos Dart, otimizando o fluxo de renderização e evitando re-renderizações desnecessárias.
+*   **Flutter Localizations (`flutter_localizations`)**: Pacote nativo do SDK do Flutter integrado para suporte completo de i18n e formatação local.
 *   **Material Design 3**: UI moderna, fluida e consistente com as diretrizes do Material 3.
 *   **Tema Dark Nativo (OLED-friendly)**: Cores balanceadas para telas OLED, com contraste premium de Charcoal e Slate, e cores ativas em Indigo/Cyan.
 *   **Tamanho de Toques Mínimo (48dp)**: Todos os componentes interativos do aplicativo foram desenhados com área mínima de clique para melhor usabilidade e acessibilidade.
@@ -21,11 +22,12 @@ O ecossistema do aplicativo foi projetado com as seguintes tecnologias e pacotes
 
 ## 🏗️ Arquitetura do Projeto
 
-A estrutura de código está dividida em 3 camadas principais (Core, Domain, Data e Presentation) para maximizar o desacoplamento:
+A estrutura de código está dividida em camadas principais (Core, Domain, Data e Presentation) para maximizar o desacoplamento:
 
 ```
 lib/
 ├── core/
+│   ├── localization/        # Sistema de i18n (AppLocalizations e extensões do BuildContext)
 │   └── theme/               # Configuração do Tema Dark, fontes e cores
 ├── domain/
 │   ├── entities/            # Modelos de dados puros (Switch, Light, Climate, Audio, Metrics)
@@ -33,15 +35,15 @@ lib/
 ├── data/
 │   └── repositories/        # Implementações Mock de repositórios (Simulações Tuya, Tasmota, Nest, etc.)
 └── presentation/
-    ├── blocs/               # Logica de estados (DeviceBloc, ClimateBloc, AudioBloc, MonitoringBloc)
-    └── screens/             # Páginas da UI (Dashboard, RoomControl, AudioCentral, Climate, EnergyPresence)
+    ├── blocs/               # Logica de estados (DeviceBloc, ClimateBloc, AudioBloc, MonitoringBloc, SettingsBloc)
+    └── screens/             # Páginas da UI (Dashboard, RoomControl, AudioCentral, Climate, EnergyPresence, SettingsScreen)
 ```
 
 ---
 
 ## 🌟 Funcionalidades Implementadas
 
-O aplicativo conta com quatro seções centrais e telas de detalhe totalmente integradas via BLoC:
+O aplicativo conta com cinco seções centrais e telas de detalhe totalmente integradas via BLoCs reativos:
 
 ### 1. Painel de Controle Duplex (Dashboard Tab)
 *   **Home Thermal Status**: Exibe a temperatura em tempo real de cada andar.
@@ -69,6 +71,14 @@ Acessado ao clicar em qualquer quarto (ex: "Living Room") ou segurando em um dis
 *   **Consumo Elétrico Trifásico**: Monitoramento em tempo real das cargas elétricas de entrada (Fase A - Residencial, Fase B - Climatização, Fase C - Cozinha/Lavanderia).
 *   **Carga Ativa Contínua**: O aplicativo escuta um `Stream` reativo que envia atualizações contínuas de consumo elétrico (em kW/h) com animações suaves de barras de progresso horizontais e exibição do valor total.
 *   **Sensores de Ocupação**: Uma lista de presença indicando se há movimento detectado nos cômodos da residência, exibindo quando ocorreu o último movimento (ex: "Active now", "2m ago") e badges verdes brilhantes para áreas ocupadas.
+
+### 5. Configurações & Internacionalização (Settings Screen)
+Acessível a partir do botão de engrenagem localizado no topo direito do Dashboard.
+*   **Internacionalização (i18n)**: Suporte de tradução dinâmica em tempo real para múltiplos idiomas. Os arquivos de tradução estão preparados para:
+    *   **Português (pt)**: Definido como o idioma padrão inicial do aplicativo.
+    *   **Inglês (en)**: Totalmente integrado e selecionável a qualquer momento.
+*   **Fuso Horário Padrão**: Fuso horário de Brasília (GMT-3 São Paulo) configurado como padrão inicial, com suporte a outros fusos através de uma lista dropdown reativa.
+*   **Documentação Interna de Métodos**: Todos os métodos, atributos e classes contam com documentação completa em formato *Dart Docstrings* no padrão oficial da linguagem.
 
 ---
 

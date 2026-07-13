@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/localization/app_localizations.dart';
 import '../blocs/audio/audio_bloc.dart';
 import '../../domain/entities/audio_device.dart';
 
+/// Guia Central de Áudio (Multiroom Cast Hub).
+/// 
+/// Gerencia a reprodução de mídia atual (título, artista e play/pause),
+/// seleção de zonas de transmissão (speakers) por cômodo/andar, volumes
+/// individuais de cada zona, controle de volume Master e sincronização
+/// multiroom global dos alto-falantes da casa.
 class AudioCentralTab extends StatefulWidget {
   const AudioCentralTab({super.key});
 
@@ -15,6 +22,7 @@ class _AudioCentralTabState extends State<AudioCentralTab> {
   @override
   void initState() {
     super.initState();
+    // Carrega o estado de áudio inicial
     context.read<AudioBloc>().add(LoadAudio());
   }
 
@@ -31,7 +39,7 @@ class _AudioCentralTabState extends State<AudioCentralTab> {
         if (state is AudioError) {
           return Center(
             child: Text(
-              'Error: ${state.message}',
+              '${context.translate('error')}: ${state.message}',
               style: const TextStyle(color: AppTheme.warningAmber),
             ),
           );
@@ -47,27 +55,27 @@ class _AudioCentralTabState extends State<AudioCentralTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title
+                // Título da Central de Áudio
                 Text(
                   'Multiroom Cast Hub',
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 16),
 
-                // Now Playing Audio Player
+                // Card do Tocando Agora
                 _buildAudioPlayerCard(context, playerState),
                 const SizedBox(height: 24),
 
-                // Master Volume Section
+                // Seção do Volume Master
                 _buildMasterVolumeSection(context, playerState),
                 const SizedBox(height: 24),
 
-                // Multiroom Selection Checkboxes & Volumes
+                // Header das Zonas de Caixas de Som
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Cast Speakers Zones',
+                      context.translate('speaker_zones'),
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     if (playerState.isSynced)
@@ -78,9 +86,9 @@ class _AudioCentralTabState extends State<AudioCentralTab> {
                           borderRadius: BorderRadius.circular(4),
                           border: Border.all(color: AppTheme.accentCyan, width: 0.5),
                         ),
-                        child: const Text(
-                          'SYNCED',
-                          style: TextStyle(
+                        child: Text(
+                          context.translate('synced'),
+                          style: const TextStyle(
                             color: AppTheme.accentCyan,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
@@ -90,10 +98,12 @@ class _AudioCentralTabState extends State<AudioCentralTab> {
                   ],
                 ),
                 const SizedBox(height: 12),
+
+                // Lista de Caixas de Som
                 _buildSpeakerZonesList(context, devices, playerState.isSynced),
                 const SizedBox(height: 28),
 
-                // Synchronize Audio Prominent Button
+                // Botão de Sincronização Geral de Áudio
                 _buildSyncButton(context, playerState),
                 const SizedBox(height: 20),
               ],
@@ -106,6 +116,7 @@ class _AudioCentralTabState extends State<AudioCentralTab> {
     );
   }
 
+  /// Constrói o reprodutor de mídia simulado (exibe álbum, título, progresso e play/pause).
   Widget _buildAudioPlayerCard(BuildContext context, AudioPlayerState playerState) {
     return Card(
       child: Padding(
@@ -114,7 +125,7 @@ class _AudioCentralTabState extends State<AudioCentralTab> {
           children: [
             Row(
               children: [
-                // album art mock
+                // Arte do Álbum simulada
                 Container(
                   width: 56,
                   height: 56,
@@ -157,9 +168,9 @@ class _AudioCentralTabState extends State<AudioCentralTab> {
                     ],
                   ),
                 ),
-                // Play / Pause Icon
+                // Botão Play/Pause com toque adaptado (>=48dp)
                 IconButton(
-                  padding: const EdgeInsets.all(12), // Max touch target padding
+                  padding: const EdgeInsets.all(12),
                   iconSize: 32,
                   icon: Icon(
                     playerState.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
@@ -172,7 +183,7 @@ class _AudioCentralTabState extends State<AudioCentralTab> {
               ],
             ),
             const SizedBox(height: 16),
-            // Linear Progress Bar Indicator
+            // Barra de progresso linear de mídia
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: const LinearProgressIndicator(
@@ -188,6 +199,7 @@ class _AudioCentralTabState extends State<AudioCentralTab> {
     );
   }
 
+  /// Constrói a seção de Volume Master (afeta todos os alto-falantes se sincronizados).
   Widget _buildMasterVolumeSection(BuildContext context, AudioPlayerState playerState) {
     return Container(
       padding: const EdgeInsets.all(16.0),
@@ -202,9 +214,9 @@ class _AudioCentralTabState extends State<AudioCentralTab> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Master Cast Volume',
-                style: TextStyle(
+              Text(
+                context.translate('master_volume'),
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -242,6 +254,7 @@ class _AudioCentralTabState extends State<AudioCentralTab> {
     );
   }
 
+  /// Constrói a lista com os alto-falantes (Chromecast, Google Nest) e seus respectivos volumes.
   Widget _buildSpeakerZonesList(BuildContext context, List<AudioDevice> devices, bool isSynced) {
     return Column(
       children: devices.map((device) {
@@ -253,7 +266,7 @@ class _AudioCentralTabState extends State<AudioCentralTab> {
               children: [
                 Row(
                   children: [
-                    // Checkbox with minimum 48dp touch target size
+                    // Caixa de seleção (Checkbox) com clique mínimo de 48dp
                     SizedBox(
                       width: 48,
                       height: 48,
@@ -261,7 +274,7 @@ class _AudioCentralTabState extends State<AudioCentralTab> {
                         value: device.isSelected,
                         activeColor: AppTheme.accentCyan,
                         onChanged: isSynced
-                            ? null // Cannot toggle selection independently if synced
+                            ? null // Desabilita seleção individual se sincronizado
                             : (val) {
                                 context.read<AudioBloc>().add(
                                       ToggleZoneSelectionEvent(device.id),
@@ -292,6 +305,7 @@ class _AudioCentralTabState extends State<AudioCentralTab> {
                     ),
                   ],
                 ),
+                // Exibe slider de volume individual se a caixa de som estiver ativa
                 if (device.isSelected) ...[
                   const Divider(color: Color(0xFF202638), height: 16),
                   Row(
@@ -303,7 +317,7 @@ class _AudioCentralTabState extends State<AudioCentralTab> {
                           min: 0.0,
                           max: 1.0,
                           onChanged: isSynced
-                              ? null // Volume bound to Master Volume if synced
+                              ? null // Volume travado ao Master se sincronizado
                               : (newVolume) {
                                   context.read<AudioBloc>().add(
                                         UpdateZoneVolumeEvent(device.id, newVolume),
@@ -330,15 +344,16 @@ class _AudioCentralTabState extends State<AudioCentralTab> {
     );
   }
 
+  /// Constrói o botão proeminente de sincronização global.
   Widget _buildSyncButton(BuildContext context, AudioPlayerState playerState) {
     final synced = playerState.isSynced;
     final color = synced ? AppTheme.warningAmber : AppTheme.accentCyan;
-    final label = synced ? 'Unsynchronize Audio Zones' : 'Synchronize Audio Across Floors';
+    final label = synced ? context.translate('unsync_speakers') : context.translate('sync_speakers');
     final icon = synced ? Icons.phonelink_erase : Icons.sync;
 
     return SizedBox(
       width: double.infinity,
-      height: 52, // touch target >= 48
+      height: 52,
       child: ElevatedButton.icon(
         style: ElevatedButton.styleFrom(
           backgroundColor: color.withOpacity(0.12),
@@ -355,8 +370,8 @@ class _AudioCentralTabState extends State<AudioCentralTab> {
             SnackBar(
               content: Text(
                 synced
-                    ? "Audio zones unlinked."
-                    : "Audio synchronized across Floors 1 and 2!",
+                    ? context.translate('speakers_unsynced')
+                    : context.translate('speakers_synced'),
               ),
               duration: const Duration(seconds: 2),
             ),
