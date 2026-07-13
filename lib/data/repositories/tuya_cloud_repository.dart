@@ -58,6 +58,7 @@ class TuyaCloudRepository {
   }
 
   String? _accessToken;
+  String? _uid;
   bool get isMock => clientId.startsWith('mock') || clientSecret.startsWith('mock');
 
   /// Gera um hash SHA256 em formato Hex.
@@ -99,6 +100,7 @@ class TuyaCloudRepository {
     final body = jsonDecode(response.body);
     if (body['success'] == true) {
       _accessToken = body['result']['access_token'] as String;
+      _uid = body['result']['uid'] as String?;
       return _accessToken!;
     } else {
       throw Exception('Autenticação falhou: ${body['msg']} (Código: ${body['code']})');
@@ -117,7 +119,8 @@ class TuyaCloudRepository {
     }
 
     final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-    const path = '/v1.0/devices'; // Lista todos os dispositivos vinculados à conta desenvolvedora
+    // Usa o endpoint baseado em UID do usuário se disponível
+    final path = _uid != null ? '/v1.0/users/$_uid/devices' : '/v1.0/devices';
     
     final stringToSign = 'GET\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n\n$path';
     final signString = clientId + _accessToken! + timestamp + stringToSign;
@@ -142,7 +145,13 @@ class TuyaCloudRepository {
         await authenticate();
         return fetchDevices(); // Tenta novamente de forma recursiva
       }
-      throw Exception('Falha ao obter dispositivos: ${body['msg']}');
+      
+      // Se o erro for de falta de permissão (1106), orienta o usuário de forma mais clara
+      if (body['code'] == 1106) {
+        throw Exception('Sem permissão (Código 1106). No portal Tuya Cloud, certifique-se de que ativou a API "Smart Home Device System" nas configurações do seu projeto.');
+      }
+      
+      throw Exception('Falha ao obter dispositivos: ${body['msg']} (Código: ${body['code']})');
     }
   }
 
