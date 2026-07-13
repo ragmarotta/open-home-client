@@ -246,8 +246,9 @@ class _ClimateTabState extends State<ClimateTab> {
                 ]
               ],
             ),
-          );
-        }).toList(),
+          ),
+        );
+      }).toList(),
     );
   }
 

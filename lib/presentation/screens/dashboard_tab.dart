@@ -280,7 +280,7 @@ class _DashboardTabState extends State<DashboardTab> {
         : ['Master Bedroom', 'Office'];
 
     return SizedBox(
-      height: 100,
+      height: 110,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
@@ -300,7 +300,7 @@ class _DashboardTabState extends State<DashboardTab> {
             borderRadius: BorderRadius.circular(16),
             child: Ink(
               width: 150,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: AppTheme.darkSurface,
                 borderRadius: BorderRadius.circular(16),

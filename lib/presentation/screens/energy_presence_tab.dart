@@ -228,7 +228,7 @@ class _EnergyPresenceTabState extends State<EnergyPresenceTab> {
     return Column(
       children: sensors.map((sensor) {
         final timeString = _formatTimeAgo(sensor.lastMotionTime);
-        final statusColor = sensor.isOccupied ? Colors.emerald : AppTheme.textSecondary;
+        final statusColor = sensor.isOccupied ? Colors.green : AppTheme.textSecondary;
 
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
@@ -236,7 +236,7 @@ class _EnergyPresenceTabState extends State<EnergyPresenceTab> {
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             leading: CircleAvatar(
               backgroundColor: sensor.isOccupied
-                  ? Colors.emerald.withOpacity(0.15)
+                  ? Colors.green.withOpacity(0.15)
                   : Colors.transparent,
               child: Icon(
                 sensor.isOccupied ? Icons.directions_run : Icons.nature_people_outlined,
