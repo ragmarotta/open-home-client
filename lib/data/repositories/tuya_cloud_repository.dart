@@ -141,8 +141,13 @@ class TuyaCloudRepository {
 
       final body = jsonDecode(response.body);
       if (body['success'] == true) {
-        final result = body['result'] as Map?;
-        final list = result?['list'] as List? ?? [];
+        final resultData = body['result'];
+        List list = [];
+        if (resultData is List) {
+          list = resultData;
+        } else if (resultData is Map) {
+          list = resultData['list'] as List? ?? [];
+        }
         
         final pageDevices = list.map((item) => TuyaDeviceModel.fromJson(Map<String, dynamic>.from(item as Map))).toList();
         allDevicesList.addAll(pageDevices);
