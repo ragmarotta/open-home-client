@@ -111,7 +111,7 @@ class TuyaCloudRepository {
   Future<List<TuyaDeviceModel>> fetchDevices() async {
     if (isMock) {
       await Future.delayed(const Duration(milliseconds: 800));
-      return _getMockDevices();
+      return getMockDevicesFallback();
     }
 
     if (_accessToken == null) {
@@ -246,8 +246,8 @@ class TuyaCloudRepository {
     return body['success'] == true;
   }
 
-  /// Retorna dispositivos simulados padrão caso esteja operando em modo Mock.
-  List<TuyaDeviceModel> _getMockDevices() {
+  /// Retorna dispositivos simulados padrão caso esteja operando em modo Mock ou fallback.
+  List<TuyaDeviceModel> getMockDevicesFallback() {
     return [
       TuyaDeviceModel(
         id: 'tuya_dev_ac1',
