@@ -8,6 +8,9 @@ import 'core/theme/app_theme.dart';
 // Localização
 import 'core/localization/app_localizations.dart';
 
+// Persistência
+import 'core/persistence/local_database.dart';
+
 // Repositórios
 import 'domain/repositories/device_repository.dart';
 import 'domain/repositories/climate_repository.dart';
@@ -26,6 +29,8 @@ import 'presentation/blocs/climate/climate_bloc.dart';
 import 'presentation/blocs/audio/audio_bloc.dart';
 import 'presentation/blocs/monitoring/monitoring_bloc.dart';
 import 'presentation/blocs/settings/settings_bloc.dart';
+import 'presentation/blocs/tuya/tuya_bloc.dart';
+import 'presentation/blocs/room/room_bloc.dart';
 
 // Telas Principais
 import 'presentation/screens/main_navigation_screen.dart';
@@ -39,6 +44,9 @@ void main() {
   final climateRepository = MockClimateRepository();
   final audioRepository = MockAudioRepository();
   final monitoringRepository = MockMonitoringRepository();
+  
+  // Banco de dados local para persistência de integrações e espaços
+  final localDatabase = LocalDatabase();
 
   runApp(
     OpenHomeApp(
@@ -46,6 +54,7 @@ void main() {
       climateRepository: climateRepository,
       audioRepository: audioRepository,
       monitoringRepository: monitoringRepository,
+      localDatabase: localDatabase,
     ),
   );
 }
@@ -59,6 +68,7 @@ class OpenHomeApp extends StatelessWidget {
   final ClimateRepository climateRepository;
   final AudioRepository audioRepository;
   final MonitoringRepository monitoringRepository;
+  final LocalDatabase localDatabase;
 
   const OpenHomeApp({
     super.key,
@@ -66,6 +76,7 @@ class OpenHomeApp extends StatelessWidget {
     required this.climateRepository,
     required this.audioRepository,
     required this.monitoringRepository,
+    required this.localDatabase,
   });
 
   @override
@@ -76,6 +87,7 @@ class OpenHomeApp extends StatelessWidget {
         RepositoryProvider<ClimateRepository>.value(value: climateRepository),
         RepositoryProvider<AudioRepository>.value(value: audioRepository),
         RepositoryProvider<MonitoringRepository>.value(value: monitoringRepository),
+        RepositoryProvider<LocalDatabase>.value(value: localDatabase),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -93,6 +105,12 @@ class OpenHomeApp extends StatelessWidget {
           ),
           BlocProvider<SettingsBloc>(
             create: (context) => SettingsBloc()..add(LoadSettingsEvent()),
+          ),
+          BlocProvider<TuyaBloc>(
+            create: (context) => TuyaBloc(localDatabase)..add(CheckTuyaConnection()),
+          ),
+          BlocProvider<RoomBloc>(
+            create: (context) => RoomBloc(localDatabase),
           ),
         ],
         child: BlocBuilder<SettingsBloc, SettingsState>(

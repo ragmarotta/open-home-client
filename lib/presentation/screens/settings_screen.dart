@@ -3,11 +3,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/localization/app_localizations.dart';
 import '../blocs/settings/settings_bloc.dart';
+import '../blocs/tuya/tuya_bloc.dart';
+import '../blocs/room/room_bloc.dart';
+import 'tuya_integration_screen.dart';
+import 'room_assignment_screen.dart';
+import '../../data/repositories/tuya_cloud_repository.dart';
 
 /// Tela de Configurações do Aplicativo.
 /// 
 /// Permite alterar o idioma do aplicativo entre Português e Inglês,
-/// bem como visualizar e gerenciar o fuso horário padrão (timezone).
+/// gerenciar o fuso horário padrão (timezone) e navegar para a integração Tuya Cloud
+/// ou para a administração de cômodos (Gerenciador de Espaços).
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
@@ -23,7 +29,10 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.translate('settings')),
+        title: Text(
+          context.translate('settings'),
+          style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: -0.5),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -36,6 +45,64 @@ class SettingsScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             physics: const BouncingScrollPhysics(),
             children: [
+              // Seção de Integrações Online
+              _buildSectionHeader(context, 'Integrações & Espaços'),
+              const SizedBox(height: 12),
+              Card(
+                child: Column(
+                  children: [
+                    // Opção: Conectar à Tuya Cloud
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      leading: CircleAvatar(
+                        backgroundColor: AppTheme.accentCyan.withOpacity(0.12),
+                        child: const Icon(Icons.cloud_queue, color: AppTheme.accentCyan),
+                      ),
+                      title: Text(
+                        context.translate('tuya_integration'),
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                      subtitle: const Text('Configurar chaves de acesso da Tuya Cloud', style: TextStyle(fontSize: 12)),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.white30),
+                      onTap: () {
+                        // Navega para a tela de integração Tuya
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const TuyaIntegrationScreen()),
+                        );
+                      },
+                    ),
+                    const Divider(color: Colors.white10, height: 1),
+                    // Opção: Gerenciador de Espaços (Cômodos)
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      leading: CircleAvatar(
+                        backgroundColor: AppTheme.accentIndigo.withOpacity(0.12),
+                        child: const Icon(Icons.room_preferences, color: AppTheme.accentIndigo),
+                      ),
+                      title: Text(
+                        context.translate('space_manager'),
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                      subtitle: const Text('Criar cômodos e atribuir dispositivos', style: TextStyle(fontSize: 12)),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.white30),
+                      onTap: () {
+                        // Certifica-se de que a lista de cômodos seja sincronizada com os dispositivos ativos
+                        final tuyaState = context.read<TuyaBloc>().state;
+                        final devicesList = tuyaState is TuyaConnected ? tuyaState.devices : const <TuyaDeviceModel>[];
+                        context.read<RoomBloc>().add(LoadRoomsEvent(tuyaDevices: devicesList));
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const RoomAssignmentScreen()),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
               // Seção de Idiomas
               _buildSectionHeader(context, context.translate('language')),
               const SizedBox(height: 12),
@@ -56,7 +123,7 @@ class SettingsScreen extends StatelessWidget {
                           }
                         },
                       ),
-                      const Divider(color: Color(0xFF202638), height: 1),
+                      const Divider(color: Colors.white10, height: 1),
                       // Opção Inglês
                       _buildRadioTile(
                         context: context,
@@ -153,7 +220,7 @@ class SettingsScreen extends StatelessWidget {
         title,
         style: Theme.of(context).textTheme.titleLarge?.copyWith(
               color: AppTheme.textSecondary,
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: FontWeight.bold,
             ),
       ),
