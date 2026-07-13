@@ -118,41 +118,58 @@ class TuyaCloudRepository {
       await authenticate();
     }
 
-    final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-    // Usa o endpoint baseado em UID do usuário se disponível
-    final path = _uid != null ? '/v1.0/users/$_uid/devices' : '/v1.0/devices';
-    
-    final stringToSign = 'GET\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n\n$path';
-    final signString = clientId + _accessToken! + timestamp + stringToSign;
-    final sign = _hmacSha256(signString, clientSecret);
+    final allDevicesList = <TuyaDeviceModel>[];
+    int pageNo = 1;
+    bool hasMore = true;
 
-    final url = Uri.parse('$baseUrl$path');
-    final response = await http.get(url, headers: {
-      'client_id': clientId,
-      'access_token': _accessToken!,
-      'sign': sign,
-      't': timestamp,
-      'sign_method': 'HMAC-SHA256',
-    }).timeout(const Duration(seconds: 10));
+    while (hasMore) {
+      final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+      final path = '/v2.0/cloud/thing/device?page_no=$pageNo&page_size=20';
+      
+      final stringToSign = 'GET\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n\n$path';
+      final signString = clientId + _accessToken! + timestamp + stringToSign;
+      final sign = _hmacSha256(signString, clientSecret);
 
-    final body = jsonDecode(response.body);
-    if (body['success'] == true) {
-      final list = body['result'] as List? ?? [];
-      return list.map((item) => TuyaDeviceModel.fromJson(Map<String, dynamic>.from(item as Map))).toList();
-    } else {
-      // Se falhar devido a token expirado (ex: erro 1010 ou 1024), tenta renovar o token
-      if (body['code'] == 1010 || body['code'] == 1024) {
-        await authenticate();
-        return fetchDevices(); // Tenta novamente de forma recursiva
+      final url = Uri.parse('$baseUrl$path');
+      final response = await http.get(url, headers: {
+        'client_id': clientId,
+        'access_token': _accessToken!,
+        'sign': sign,
+        't': timestamp,
+        'sign_method': 'HMAC-SHA256',
+      }).timeout(const Duration(seconds: 10));
+
+      final body = jsonDecode(response.body);
+      if (body['success'] == true) {
+        final result = body['result'] as Map?;
+        final list = result?['list'] as List? ?? [];
+        
+        final pageDevices = list.map((item) => TuyaDeviceModel.fromJson(Map<String, dynamic>.from(item as Map))).toList();
+        allDevicesList.addAll(pageDevices);
+
+        // Se trouxer menos do que o tamanho da página, chegamos ao fim
+        if (pageDevices.length < 20) {
+          hasMore = false;
+        } else {
+          pageNo++;
+        }
+      } else {
+        // Se falhar devido a token expirado (ex: erro 1010 ou 1024), tenta renovar o token
+        if (body['code'] == 1010 || body['code'] == 1024) {
+          await authenticate();
+          continue; // Tenta novamente com o token renovado
+        }
+        
+        // Se o erro for de falta de permissão (1106), orienta de forma clara
+        if (body['code'] == 1106) {
+          throw Exception('Sem permissão (Código 1106). No portal Tuya Cloud, certifique-se de que ativou a API "Smart Home Basic Service" (ou IoT Core) e vinculou sua conta Smart Life.');
+        }
+        
+        throw Exception('Falha ao obter dispositivos: ${body['msg']} (Código: ${body['code']})');
       }
-      
-      // Se o erro for de falta de permissão (1106), orienta o usuário de forma mais clara
-      if (body['code'] == 1106) {
-        throw Exception('Sem permissão (Código 1106). No portal Tuya Cloud, certifique-se de que ativou a API "Smart Home Device System" nas configurações do seu projeto.');
-      }
-      
-      throw Exception('Falha ao obter dispositivos: ${body['msg']} (Código: ${body['code']})');
     }
+
+    return allDevicesList;
   }
 
   /// Envia comando de ligar/desligar para um dispositivo específico da Tuya.

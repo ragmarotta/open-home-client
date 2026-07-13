@@ -194,27 +194,62 @@ class _TuyaIntegrationScreenState extends State<TuyaIntegrationScreen> {
 
                 // Botão Primário: Salvar / Conectar ou Desconectar
                 if (isConnected)
-                  SizedBox(
-                    height: 52,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent.withOpacity(0.12),
-                        foregroundColor: Colors.redAccent,
-                        elevation: 0,
-                        side: const BorderSide(color: Colors.redAccent, width: 0.5),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(
+                        height: 52,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.accentCyan,
+                            foregroundColor: Colors.black,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                          onPressed: isConnecting
+                              ? null
+                              : () {
+                                  context.read<TuyaBloc>().add(SyncDevices());
+                                },
+                          icon: isConnecting
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2),
+                                )
+                              : const Icon(Icons.sync),
+                          label: Text(
+                            context.translate('sync_devices'),
+                            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+                          ),
+                        ),
                       ),
-                      onPressed: () {
-                        context.read<TuyaBloc>().add(DisconnectTuya());
-                        _clientIdController.clear();
-                        _clientSecretController.clear();
-                      },
-                      icon: const Icon(Icons.link_off),
-                      label: Text(
-                        context.translate('disconnect'),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        height: 52,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent.withOpacity(0.12),
+                            foregroundColor: Colors.redAccent,
+                            elevation: 0,
+                            side: const BorderSide(color: Colors.redAccent, width: 0.5),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                          onPressed: isConnecting
+                              ? null
+                              : () {
+                                  context.read<TuyaBloc>().add(DisconnectTuya());
+                                  _clientIdController.clear();
+                                  _clientSecretController.clear();
+                                },
+                          icon: const Icon(Icons.link_off),
+                          label: Text(
+                            context.translate('disconnect'),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   )
                 else
                   SizedBox(
