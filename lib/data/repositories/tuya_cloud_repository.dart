@@ -119,10 +119,12 @@ class TuyaCloudRepository {
     }
 
     final allDevicesList = <TuyaDeviceModel>[];
+    final seenIds = <String>{};
     int pageNo = 1;
     bool hasMore = true;
+    const maxPages = 10; // Limite de segurança para evitar loops infinitos
 
-    while (hasMore) {
+    while (hasMore && pageNo <= maxPages) {
       final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
       final path = '/v2.0/cloud/thing/device?page_no=$pageNo&page_size=20';
       
@@ -149,11 +151,26 @@ class TuyaCloudRepository {
           list = resultData['list'] as List? ?? [];
         }
         
+        if (list.isEmpty) {
+          hasMore = false;
+          break;
+        }
+        
         final pageDevices = list.map((item) => TuyaDeviceModel.fromJson(Map<String, dynamic>.from(item as Map))).toList();
-        allDevicesList.addAll(pageDevices);
+        
+        // Verifica se há novos itens nesta página
+        bool hasNewItems = false;
+        for (var device in pageDevices) {
+          if (!seenIds.contains(device.id)) {
+            seenIds.add(device.id);
+            allDevicesList.add(device);
+            hasNewItems = true;
+          }
+        }
 
-        // Se trouxer menos do que o tamanho da página, chegamos ao fim
-        if (pageDevices.length < 20) {
+        // Se a página retornou menos registros que o limite de 20
+        // ou se não há nenhum item inédito (evita loop se o servidor ignorar a paginação)
+        if (pageDevices.length < 20 || !hasNewItems) {
           hasMore = false;
         } else {
           pageNo++;
