@@ -91,6 +91,8 @@ A classe **`TuyaCloudRepository`** (em `lib/data/repositories/tuya_cloud_reposit
 *   **Glow Status Indicator**: Painel superior indicando o estado atual ("Conectado à Nuvem" em verde neon pulsante ou "Desconectado" em cinza opaco).
 *   **Campos de Formulário**: Inserção de Access ID/Client ID, Access Secret/Client Secret e escolha do datacenter regional (América, Europa, China).
 *   **Salvar e Sincronizar**: Ao clicar, valida a autenticação na nuvem da Tuya, salva na persistência local em caso de sucesso, sincroniza os dispositivos e redireciona automaticamente para o Gerenciador de Espaços.
+*   **Atalho de Guia Rápido**: O botão "Não possui as chaves? Siga o guia rápido" abre o portal de desenvolvedores da Tuya (`https://iot.tuya.com/`) diretamente no navegador do dispositivo usando o plugin `url_launcher`.
+*   **Passo a Passo Integrado**: Um componente visual minimalista no rodapé com o roteiro detalhado em português ensinando o usuário a criar a conta, gerar o projeto e vincular o app Smart Life.
 
 ### 3. Gerenciador de Espaços (Personalização)
 *   **Criação de Cômodos**: Diálogo para cadastrar novos cômodos personalizados especificando nome e andar.

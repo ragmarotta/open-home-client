@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/localization/app_localizations.dart';
 import '../blocs/tuya/tuya_bloc.dart';
@@ -11,6 +12,7 @@ import 'room_assignment_screen.dart';
 /// Permite ao usuário inserir suas credenciais de desenvolvedor (Access ID/Secret)
 /// e selecionar o datacenter de conexão regional. Ao conectar com sucesso,
 /// sincroniza os dispositivos e redireciona o usuário para a tela de gerenciamento de espaços.
+/// Inclui também um guia passo a passo interativo e atalho para o portal Tuya IoT.
 class TuyaIntegrationScreen extends StatefulWidget {
   const TuyaIntegrationScreen({super.key});
 
@@ -45,6 +47,26 @@ class _TuyaIntegrationScreenState extends State<TuyaIntegrationScreen> {
             clientSecret: _clientSecretController.text.trim(),
             region: _selectedRegion,
           ));
+    }
+  }
+
+  /// Abre o portal Tuya IoT no navegador do dispositivo de forma segura.
+  Future<void> _launchTuyaIotPortal() async {
+    final Uri url = Uri.parse('https://iot.tuya.com/');
+    try {
+      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+        throw Exception('Could not launch $url');
+      }
+    } catch (e) {
+      debugPrint('Error launching URL: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Não foi possível abrir o navegador. Visite https://iot.tuya.com/'),
+            backgroundColor: AppTheme.warningAmber,
+          ),
+        );
+      }
     }
   }
 
@@ -168,7 +190,7 @@ class _TuyaIntegrationScreenState extends State<TuyaIntegrationScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
 
                 // Botão Primário: Salvar / Conectar ou Desconectar
                 if (isConnected)
@@ -217,6 +239,27 @@ class _TuyaIntegrationScreenState extends State<TuyaIntegrationScreen> {
                             ),
                     ),
                   ),
+                const SizedBox(height: 24),
+
+                // Botão "Não possui as chaves? Siga o guia rápido"
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.accentCyan,
+                    side: const BorderSide(color: Colors.white10, width: 0.5),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  icon: const Icon(Icons.help_outline, size: 18),
+                  label: const Text(
+                    'Não possui as chaves? Siga o guia rápido',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  onPressed: _launchTuyaIotPortal,
+                ),
+                const SizedBox(height: 24),
+
+                // Componente Passo a Passo (Stepper sutil e minimalista)
+                _buildInstructionGuide(),
               ],
             ),
           );
@@ -282,6 +325,84 @@ class _TuyaIntegrationScreenState extends State<TuyaIntegrationScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  /// Constrói o painel sutil e minimalista com as instruções passo a passo.
+  Widget _buildInstructionGuide() {
+    return Container(
+      padding: const EdgeInsets.all(18.0),
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.04), width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.info_outline, color: AppTheme.accentCyan, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Como Obter as Chaves da Tuya',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Colors.white,
+                  letterSpacing: -0.2,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          _buildInstructionStep('1', 'Crie uma conta no portal Tuya IoT.'),
+          const Divider(color: Colors.white10, height: 20, indent: 32),
+          _buildInstructionStep('2', 'Vá em Cloud > Development e crie um projeto Smart Home.'),
+          const Divider(color: Colors.white10, height: 20, indent: 32),
+          _buildInstructionStep('3', 'Copie o \'Access ID\' e o \'Access Secret\' e cole nos campos acima.'),
+          const Divider(color: Colors.white10, height: 20, indent: 32),
+          _buildInstructionStep('4', 'Vincule seu aplicativo Smart Life na aba \'Devices > Link Tuya App Account\'.'),
+        ],
+      ),
+    );
+  }
+
+  /// Helper para construir uma linha individual do guia passo a passo.
+  Widget _buildInstructionStep(String number, String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 22,
+          height: 22,
+          decoration: BoxDecoration(
+            color: AppTheme.accentCyan.withOpacity(0.12),
+            shape: BoxShape.circle,
+            border: Border.all(color: AppTheme.accentCyan, width: 1.5),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            number,
+            style: const TextStyle(
+              color: AppTheme.accentCyan,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              color: AppTheme.textSecondary,
+              fontSize: 13,
+              height: 1.35,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
