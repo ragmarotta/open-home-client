@@ -158,6 +158,11 @@ class TuyaBloc extends Bloc<TuyaEvent, TuyaState> {
     emit(TuyaConnecting());
     try {
       // Instancia o repositório com as novas credenciais fornecidas
+      print('=== TENTATIVA DE CONEXÃO TUYA BLoC ===');
+      print('ID: ${event.clientId}');
+      print('Secret (Tamanho): ${event.clientSecret.length} caracteres');
+      print('Região: ${event.region}');
+
       final repo = TuyaCloudRepository(
         clientId: event.clientId,
         clientSecret: event.clientSecret,
@@ -166,7 +171,9 @@ class TuyaBloc extends Bloc<TuyaEvent, TuyaState> {
 
       // Valida efetuando a autenticação de token
       await repo.authenticate();
+      print('Autenticação com a Tuya Cloud concluída com sucesso!');
       final devices = await repo.fetchDevices();
+      print('Dispositivos sincronizados da Tuya Cloud: ${devices.length}');
 
       // Salva com sucesso na base JSON local
       await _localDatabase.saveTuyaCredentials(
@@ -178,7 +185,9 @@ class TuyaBloc extends Bloc<TuyaEvent, TuyaState> {
 
       _repository = repo;
       emit(TuyaConnected(clientId: event.clientId, region: event.region, devices: devices));
-    } catch (e) {
+    } catch (e, s) {
+      print('Erro ao tentar conectar Tuya BLoC: $e');
+      print('StackTrace: $s');
       // Falha ao conectar: limpa credenciais da tela de status e notifica
       await _localDatabase.clearTuyaCredentials();
       emit(TuyaError(e.toString()));
