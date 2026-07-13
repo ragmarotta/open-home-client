@@ -66,7 +66,7 @@ class TuyaCloudRepository {
   }
 
   /// Gera assinatura HMAC-SHA256 requerida pela API da Tuya.
-  String _hmacSha256(String key, String message) {
+  String _hmacSha256(String message, String key) {
     final hmac = Hmac(sha256, utf8.encode(key));
     final digest = hmac.convert(utf8.encode(message));
     return digest.toString().toUpperCase();
