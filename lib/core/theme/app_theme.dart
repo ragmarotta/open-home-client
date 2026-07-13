@@ -1,16 +1,34 @@
 import 'package:flutter/material.dart';
 
+/// Configuração do Tema Visual Premium do aplicativo Open Home.
+/// 
+/// Baseia-se no Material 3 com estilo Dark OLED-friendly, cantos arredondados
+/// acentuados, sliders espessos modernos (estilo iOS/Apple HomeKit) e
+/// gradientes vibrantes para estados ativos.
 class AppTheme {
-  // Brand colors
-  static const Color darkBg = Color(0xFF0A0C14);      // Slate Black (OLED-friendly)
-  static const Color darkSurface = Color(0xFF141824); // Charcoal Surface
-  static const Color accentIndigo = Color(0xFF6366F1); // Indigo active accent
-  static const Color accentCyan = Color(0xFF22D3EE);   // Cyan accent
-  static const Color warningAmber = Color(0xFFF59E0B); // Amber warning accent
+  // Cores de Fundo e Superfícies
+  static const Color darkBg = Color(0xFF08080C);           // Preto profundo (OLED)
+  static const Color darkSurface = Color(0xFF14141A);      // Superfície Charcoal sutil
+  static const Color inactiveCard = Color(0xFF1C1C24);     // Cartão inativo (Grafite sofisticado)
   
-  static const Color textPrimary = Color(0xFFF8FAFC);  // High contrast white
-  static const Color textSecondary = Color(0xFF94A3B8); // Slate grey
+  // Destaques e Alertas
+  static const Color accentIndigo = Color(0xFF6366F1);     // Indigo ativo
+  static const Color accentCyan = Color(0xFF22D3EE);       // Cyan ativo
+  static const Color warningAmber = Color(0xFFF59E0B);     // Alerta Amber
+  
+  // Cores de Texto
+  static const Color textPrimary = Color(0xFFF8FAFC);      // Branco contraste total
+  static const Color textSecondary = Color(0x99FFFFFF);    // Branco translúcido (Opacidade sutil)
+  static const Color textMuted = Color(0x66FFFFFF);        // Texto muito sutil
 
+  /// Gradiente premium utilizado para representar dispositivos ligados.
+  static const LinearGradient activeGradient = LinearGradient(
+    colors: [accentIndigo, Color(0xFF4F46E5), accentCyan],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  /// Retorna o ThemeData configurado para o estilo escuro premium.
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
@@ -28,89 +46,96 @@ class AppTheme {
         onSurface: textPrimary,
       ),
       cardTheme: CardThemeData(
-        color: darkSurface,
+        color: inactiveCard,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFF202638), width: 1),
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: Colors.white10, width: 0.5),
         ),
       ),
       textTheme: const TextTheme(
         headlineMedium: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
+          fontSize: 26,
+          fontWeight: FontWeight.w900,
           color: textPrimary,
-          letterSpacing: -0.5,
+          letterSpacing: -0.8,
         ),
         titleLarge: TextStyle(
           fontSize: 20,
+          fontWeight: FontWeight.w700,
+          color: textPrimary,
+          letterSpacing: -0.4,
+        ),
+        titleMedium: TextStyle(
+          fontSize: 16,
           fontWeight: FontWeight.w600,
           color: textPrimary,
           letterSpacing: -0.2,
         ),
-        titleMedium: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          color: textPrimary,
-        ),
         bodyLarge: TextStyle(
-          fontSize: 16,
+          fontSize: 15,
           color: textSecondary,
         ),
         bodyMedium: TextStyle(
-          fontSize: 14,
-          color: textSecondary,
+          fontSize: 13,
+          color: textMuted,
         ),
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
           backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
             if (states.contains(MaterialState.selected)) {
-              return accentIndigo;
+              return accentIndigo.withOpacity(0.2);
             }
             return darkSurface;
           }),
           foregroundColor: MaterialStateProperty.resolveWith<Color>((states) {
             if (states.contains(MaterialState.selected)) {
-              return Colors.white;
+              return accentCyan;
             }
             return textSecondary;
           }),
           side: MaterialStateProperty.all(
-            const BorderSide(color: Color(0xFF202638), width: 1),
+            const BorderSide(color: Colors.white10, width: 0.5),
+          ),
+          shape: MaterialStateProperty.all(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
           padding: MaterialStateProperty.all(
             const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           ),
         ),
       ),
+      // Slider Estilo iOS/HomeKit (Trilho espesso, controle redondo branco e sem divisores pesados)
       sliderTheme: const SliderThemeData(
-        activeTrackColor: accentCyan,
-        inactiveTrackColor: Color(0xFF202638),
-        thumbColor: accentCyan,
-        overlayColor: Color(0x2922D3EE),
-        trackHeight: 6,
+        activeTrackColor: Colors.white,
+        inactiveTrackColor: Colors.white12,
+        thumbColor: Colors.white,
+        trackHeight: 14,
+        thumbShape: RoundSliderThumbShape(enabledThumbRadius: 9, elevation: 2),
+        overlayShape: RoundSliderOverlayShape(overlayRadius: 20),
+        trackShape: RoundedRectSliderTrackShape(),
       ),
       switchTheme: SwitchThemeData(
         thumbColor: MaterialStateProperty.resolveWith<Color>((states) {
           if (states.contains(MaterialState.selected)) {
-            return accentCyan;
+            return Colors.white;
           }
           return textSecondary;
         }),
         trackColor: MaterialStateProperty.resolveWith<Color>((states) {
           if (states.contains(MaterialState.selected)) {
-            return accentCyan.withOpacity(0.4);
+            return accentCyan.withOpacity(0.8);
           }
-          return const Color(0xFF202638);
+          return Colors.white12;
         }),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: darkSurface,
+        backgroundColor: Color(0xFF0C0C12),
         selectedItemColor: accentCyan,
-        unselectedItemColor: textSecondary,
+        unselectedItemColor: Colors.white38,
         type: BottomNavigationBarType.fixed,
-        elevation: 8,
+        elevation: 0,
       ),
     );
   }

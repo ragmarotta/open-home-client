@@ -10,8 +10,8 @@ import 'settings_screen.dart';
 
 /// Guia de Painel de Controle (Dashboard).
 /// 
-/// Apresenta o status térmico geral da casa, controle de andares e um grid
-/// contendo os dispositivos ativos e salas disponíveis no andar selecionado.
+/// Apresenta o status térmico geral da casa (em formato cápsula elegante),
+/// alternador de andares animado e o grid de dispositivos ativos com transição suave.
 class DashboardTab extends StatefulWidget {
   const DashboardTab({super.key});
 
@@ -20,18 +20,18 @@ class DashboardTab extends StatefulWidget {
 }
 
 class _DashboardTabState extends State<DashboardTab> {
-  // Controle de andar atualmente selecionado (1 para Térreo, 2 para Superior)
+  // Controle de andar selecionado (1 para Térreo, 2 para Superior)
   int _selectedFloor = 1;
 
   @override
   void initState() {
     super.initState();
-    // Dispara a carga de dispositivos e dados climáticos ao iniciar
+    // Dispara a busca inicial de dados
     context.read<DeviceBloc>().add(LoadDevices(_selectedFloor));
     context.read<ClimateBloc>().add(LoadClimate());
   }
 
-  /// Gerencia a troca de andar e recarrega os dispositivos correspondentes.
+  /// Altera o andar selecionado e recarrega os dispositivos correspondentes.
   void _onFloorChanged(int floor) {
     setState(() {
       _selectedFloor = floor;
@@ -47,7 +47,7 @@ class _DashboardTabState extends State<DashboardTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Título do Painel com botão de configurações
+          // Título do Painel com botão de configurações premium
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -55,7 +55,6 @@ class _DashboardTabState extends State<DashboardTab> {
                 context.translate('dashboard'),
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
-              // Botão de Configurações de Toque Grande (>=48dp)
               IconButton(
                 padding: const EdgeInsets.all(12),
                 iconSize: 26,
@@ -73,11 +72,11 @@ class _DashboardTabState extends State<DashboardTab> {
           ),
           const SizedBox(height: 16),
 
-          // Card de Status Térmico Geral da Casa
+          // Cabeçalho térmico no formato cápsula elegante
           _buildThermalStatusCard(),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
 
-          // Botões Segmentados para alternar entre os andares (Térreo / Superior)
+          // Alternador de andares segmentado
           Center(
             child: SizedBox(
               width: double.infinity,
@@ -104,208 +103,131 @@ class _DashboardTabState extends State<DashboardTab> {
           ),
           const SizedBox(height: 24),
 
-          // Seção de Cômodos do Andar Atual
-          Text(
-            context.translate('rooms'),
-            style: Theme.of(context).textTheme.titleLarge,
+          // Transição de troca de andar usando AnimatedSwitcher (Deslize + Fade)
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 350),
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0.04, 0),
+                    end: Offset.zero,
+                  ).animate(CurvedAnimation(parent: animation, curve: Curves.easeInOut)),
+                  child: child,
+                ),
+              );
+            },
+            child: Column(
+              key: ValueKey<int>(_selectedFloor),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Seção de Cômodos
+                Text(
+                  context.translate('rooms'),
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 12),
+                _buildRoomsHorizontalList(),
+                const SizedBox(height: 28),
+
+                // Seção de Dispositivos
+                Text(
+                  context.translate('active_devices'),
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 12),
+                _buildDevicesGrid(),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-
-          // Carrossel Horizontal de Cômodos
-          _buildRoomsHorizontalList(),
-          const SizedBox(height: 24),
-
-          // Seção de Dispositivos Rápidos do Andar
-          Text(
-            context.translate('active_devices'),
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 12),
-
-          // Grid de cards de dispositivos ativos
-          _buildDevicesGrid(),
           const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  /// Constrói o painel térmico geral, recuperando as temperaturas via ClimateBloc.
+  /// Constrói o cabeçalho térmico no formato de uma cápsula elegante.
   Widget _buildThermalStatusCard() {
     return BlocBuilder<ClimateBloc, ClimateState>(
       builder: (context, state) {
         double floor1Temp = 22.0;
         double floor2Temp = 27.0;
-        bool isLoading = state is ClimateLoading;
 
         if (state is ClimateLoaded) {
           floor1Temp = state.floorTemperatures[1] ?? 22.0;
           floor2Temp = state.floorTemperatures[2] ?? 27.0;
         }
 
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.thermostat, color: AppTheme.accentCyan),
-                    const SizedBox(width: 8),
-                    Text(
-                      context.translate('thermal_status'),
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: AppTheme.textPrimary,
-                          ),
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          decoration: BoxDecoration(
+            color: AppTheme.darkSurface,
+            borderRadius: BorderRadius.circular(30), // Formato cápsula
+            border: Border.all(color: Colors.white.withOpacity(0.05), width: 0.5),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Resumo Andar 1
+              Row(
+                children: [
+                  const Icon(Icons.thermostat, color: AppTheme.accentCyan, size: 20),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${context.translate('floor_1').split(' ').first}: ',
+                    style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                  ),
+                  Text(
+                    '${floor1Temp.toStringAsFixed(0)}°C',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    if (isLoading) ...[
-                      const Spacer(),
-                      const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppTheme.accentCyan,
-                        ),
-                      ),
-                    ]
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    // Status Térmico do Andar 1
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppTheme.darkBg,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFF202638)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.translate('floor_1'),
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: AppTheme.textSecondary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Text(
-                                  '${floor1Temp.toStringAsFixed(0)}°C',
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 4,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.green.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      context.translate('comfortable'),
-                                      style: const TextStyle(
-                                        color: Colors.greenAccent,
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
+                    child: Text(
+                      context.translate('comfortable'),
+                      style: const TextStyle(color: Colors.greenAccent, fontSize: 8, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(width: 12),
-                    // Status Térmico do Andar 2
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppTheme.darkBg,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFF202638)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.translate('floor_2'),
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: AppTheme.textSecondary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Text(
-                                  '${floor2Temp.toStringAsFixed(0)}°C',
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 4,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.warningAmber.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      '${context.translate('warm')} ⚠️',
-                                      style: const TextStyle(
-                                        color: AppTheme.warningAmber,
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
+                  ),
+                ],
+              ),
+              // Divisor vertical elegante
+              Container(
+                height: 16,
+                width: 1,
+                color: Colors.white10,
+              ),
+              // Resumo Andar 2
+              Row(
+                children: [
+                  Text(
+                    '${context.translate('floor_2').split(' ').first}: ',
+                    style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                  ),
+                  Text(
+                    '${floor2Temp.toStringAsFixed(0)}°C',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppTheme.warningAmber.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  ],
-                ),
-              ],
-            ),
+                    child: Text(
+                      '${context.translate('warm')} ⚠️',
+                      style: const TextStyle(color: AppTheme.warningAmber, fontSize: 8, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         );
       },
@@ -327,7 +249,6 @@ class _DashboardTabState extends State<DashboardTab> {
         separatorBuilder: (context, index) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
           final roomName = floorRooms[index];
-          // Mapeia chaves de salas para suas respectivas traduções do arquivo de idioma
           final displayName = roomName == 'Living Room'
               ? context.translate('living_room')
               : roomName == 'Kitchen'
@@ -345,14 +266,14 @@ class _DashboardTabState extends State<DashboardTab> {
                 ),
               );
             },
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
             child: Ink(
               width: 150,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 color: AppTheme.darkSurface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF202638)),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.05), width: 0.5),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -372,9 +293,10 @@ class _DashboardTabState extends State<DashboardTab> {
                   Text(
                     displayName,
                     style: const TextStyle(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
                       fontSize: 14,
+                      letterSpacing: -0.2,
                     ),
                   ),
                 ],
@@ -386,7 +308,7 @@ class _DashboardTabState extends State<DashboardTab> {
     );
   }
 
-  /// Constrói o grid contendo todos os dispositivos ativos cadastrados no andar.
+  /// Constrói o grid de dispositivos ativos com AnimatedContainers.
   Widget _buildDevicesGrid() {
     return BlocBuilder<DeviceBloc, DeviceState>(
       builder: (context, state) {
@@ -425,7 +347,7 @@ class _DashboardTabState extends State<DashboardTab> {
             itemCount: devices.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 1.3,
+              childAspectRatio: 1.25,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),
@@ -444,66 +366,94 @@ class _DashboardTabState extends State<DashboardTab> {
               } else if (device is SmartLight) {
                 isOn = device.isOn;
                 details = "${(device.brightness * 100).toStringAsFixed(0)}% ${context.translate('dim')} | ${device.brand}";
-                icon = Icons.tungsten;
+                icon = Icons.tungsten_outlined;
               }
 
-              final activeColor = isOn ? AppTheme.accentCyan : AppTheme.textSecondary;
+              // Cores e decorações dinâmicas para a micro-interação
+              final activeTextColor = isOn ? Colors.white : AppTheme.textPrimary;
+              final activeSubtitleColor = isOn ? Colors.white70 : AppTheme.textMuted;
+              final activeIconColor = isOn ? Colors.white : AppTheme.textSecondary;
 
-              return Card(
-                child: InkWell(
-                  onTap: () {
-                    // Alternação rápida de On/Off de um dispositivo
-                    context.read<DeviceBloc>().add(ToggleDeviceEvent(device.id));
-                  },
-                  onLongPress: () {
-                    // Ao segurar, navega para a tela de controle detalhado do cômodo correspondente
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => RoomControlScreen(roomName: device.room),
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                decoration: isOn
+                    ? const BoxDecoration(
+                        gradient: AppTheme.activeGradient,
+                        borderRadius: BorderRadius.all(Radius.circular(24)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0x2B6366F1),
+                            blurRadius: 12,
+                            spreadRadius: 2,
+                            offset: Offset(0, 4),
+                          )
+                        ],
+                      )
+                    : BoxDecoration(
+                        color: AppTheme.inactiveCard,
+                        borderRadius: const BorderRadius.all(Radius.circular(24)),
+                        border: Border.all(color: Colors.white.withOpacity(0.04), width: 0.5),
                       ),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Icon(icon, color: activeColor, size: 28),
-                            Switch(
-                              value: isOn,
-                              onChanged: (_) {
-                                context.read<DeviceBloc>().add(ToggleDeviceEvent(device.id));
-                              },
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      context.read<DeviceBloc>().add(ToggleDeviceEvent(device.id));
+                    },
+                    onLongPress: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RoomControlScreen(roomName: device.room),
+                        ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(24),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Icon(icon, color: activeIconColor, size: 28),
+                              // Switch com padding de clique otimizado
+                              Transform.scale(
+                                scale: 0.9,
+                                child: Switch(
+                                  value: isOn,
+                                  onChanged: (_) {
+                                    context.read<DeviceBloc>().add(ToggleDeviceEvent(device.id));
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          Text(
+                            device.name,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: activeTextColor,
                             ),
-                          ],
-                        ),
-                        const Spacer(),
-                        Text(
-                          device.name,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          details,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: AppTheme.textSecondary,
+                          const SizedBox(height: 2),
+                          Text(
+                            details,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: activeSubtitleColor,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

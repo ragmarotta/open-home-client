@@ -8,8 +8,8 @@ import '../../domain/entities/monitoring_metrics.dart';
 /// Guia de Monitoramento de Energia e Sensores de Presença (Security & Energy).
 /// 
 /// Apresenta o painel de consumo elétrico trifásico dinâmico (com dados reativos
-/// recebidos via Stream do MonitoringBloc) e exibe os sensores de movimento
-/// associados aos cômodos (indicando se estão ocupados ou vazios e o horário do último movimento).
+/// recebidos via Stream do MonitoringBloc e progresso linear arredondado premium)
+/// e exibe os sensores de movimento associados aos cômodos com brilho indicativo de ocupação.
 class EnergyPresenceTab extends StatefulWidget {
   const EnergyPresenceTab({super.key});
 
@@ -50,7 +50,7 @@ class _EnergyPresenceTabState extends State<EnergyPresenceTab> {
 
           return SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -99,100 +99,112 @@ class _EnergyPresenceTabState extends State<EnergyPresenceTab> {
     final double pctB = (energy.phaseB / maxPhaseLoad).clamp(0.0, 1.0);
     final double pctC = (energy.phaseC / maxPhaseLoad).clamp(0.0, 1.0);
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.bolt, color: AppTheme.warningAmber),
-                    const SizedBox(width: 8),
-                    Text(
-                      context.translate('energy_consumption'),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-                // Pequeno ponto pulsante indicador de fluxo ativo (Live)
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Colors.redAccent,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            // Exibição da carga total ativa geral
-            Center(
-              child: Column(
+    return Container(
+      padding: const EdgeInsets.all(20.0),
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withOpacity(0.04), width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
                 children: [
+                  const Icon(Icons.bolt, color: AppTheme.warningAmber),
+                  const SizedBox(width: 8),
                   Text(
-                    '${energy.totalLoad.toStringAsFixed(2)} kW/h',
+                    context.translate('energy_consumption'),
                     style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w900,
-                      color: AppTheme.accentCyan,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  Text(
-                    context.translate('active_load'),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppTheme.textSecondary,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: -0.2,
                     ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 24),
+              // Ponto pulsante indicador de fluxo ativo (Live)
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: Colors.redAccent,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.redAccent.withOpacity(0.5),
+                      blurRadius: 6,
+                      spreadRadius: 1,
+                    )
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
 
-            // Barra de Progresso da Fase A
-            _buildPhaseProgressBar(
-              phaseName: 'Phase A (Main Home)',
-              valueKw: energy.phaseA,
-              progressPct: pctA,
-              barColor: AppTheme.accentIndigo,
+          // Exibição da carga total ativa geral com destaque
+          Center(
+            child: Column(
+              children: [
+                Text(
+                  '${energy.totalLoad.toStringAsFixed(2)} kW/h',
+                  style: const TextStyle(
+                    fontSize: 34,
+                    fontWeight: FontWeight.w900,
+                    color: AppTheme.accentCyan,
+                    letterSpacing: -0.8,
+                  ),
+                ),
+                Text(
+                  context.translate('active_load'),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.textMuted,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
+          ),
+          const SizedBox(height: 28),
 
-            // Barra de Progresso da Fase B
-            _buildPhaseProgressBar(
-              phaseName: 'Phase B (Climate/AC)',
-              valueKw: energy.phaseB,
-              progressPct: pctB,
-              barColor: AppTheme.accentCyan,
-            ),
-            const SizedBox(height: 16),
+          // Barra de Progresso da Fase A
+          _buildPhaseProgressBar(
+            phaseName: 'Phase A (Main Home)',
+            valueKw: energy.phaseA,
+            progressPct: pctA,
+            barColor: AppTheme.accentIndigo,
+          ),
+          const SizedBox(height: 18),
 
-            // Barra de Progresso da Fase C
-            _buildPhaseProgressBar(
-              phaseName: 'Phase C (Kitchen/Laundry)',
-              valueKw: energy.phaseC,
-              progressPct: pctC,
-              barColor: AppTheme.warningAmber,
-            ),
-          ],
-        ),
+          // Barra de Progresso da Fase B
+          _buildPhaseProgressBar(
+            phaseName: 'Phase B (Climate/AC)',
+            valueKw: energy.phaseB,
+            progressPct: pctB,
+            barColor: AppTheme.accentCyan,
+          ),
+          const SizedBox(height: 18),
+
+          // Barra de Progresso da Fase C
+          _buildPhaseProgressBar(
+            phaseName: 'Phase C (Kitchen/Laundry)',
+            valueKw: energy.phaseC,
+            progressPct: pctC,
+            barColor: AppTheme.warningAmber,
+          ),
+        ],
       ),
     );
   }
 
-  /// Helper para desenhar a barra de progresso horizontal e métricas de cada fase elétrica.
+  /// Helper para desenhar a barra de progresso horizontal arredondada e métricas de cada fase elétrica.
   Widget _buildPhaseProgressBar({
     required String phaseName,
     required double valueKw,
@@ -207,7 +219,7 @@ class _EnergyPresenceTabState extends State<EnergyPresenceTab> {
           children: [
             Text(
               phaseName,
-              style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary),
+              style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
             ),
             Text(
               '${valueKw.toStringAsFixed(2)} kW',
@@ -219,13 +231,14 @@ class _EnergyPresenceTabState extends State<EnergyPresenceTab> {
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
+        // Barra linear espessa e com bordas arredondadas (premium)
         ClipRRect(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(6),
           child: LinearProgressIndicator(
             value: progressPct,
-            minHeight: 8,
-            backgroundColor: const Color(0xFF202638),
+            minHeight: 10,
+            backgroundColor: Colors.white.withOpacity(0.04),
             valueColor: AlwaysStoppedAnimation<Color>(barColor),
           ),
         ),
@@ -238,7 +251,6 @@ class _EnergyPresenceTabState extends State<EnergyPresenceTab> {
     return Column(
       children: sensors.map((sensor) {
         final timeString = _formatTimeAgo(sensor.lastMotionTime);
-        // Traduz o nome da sala para o fuso local
         final roomDisplayName = sensor.roomName == 'Living Room'
             ? context.translate('living_room')
             : sensor.roomName == 'Kitchen'
@@ -247,14 +259,22 @@ class _EnergyPresenceTabState extends State<EnergyPresenceTab> {
                     ? context.translate('bedroom')
                     : context.translate('office');
 
-        return Card(
+        return Container(
           margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: sensor.isOccupied ? const Color(0xFF131F1C) : AppTheme.inactiveCard,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: sensor.isOccupied ? Colors.green.withOpacity(0.25) : Colors.white.withOpacity(0.04),
+              width: 1,
+            ),
+          ),
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             leading: CircleAvatar(
               backgroundColor: sensor.isOccupied
-                  ? Colors.green.withOpacity(0.15)
-                  : Colors.transparent,
+                  ? Colors.green.withOpacity(0.12)
+                  : Colors.white.withOpacity(0.03),
               child: Icon(
                 sensor.isOccupied ? Icons.directions_run : Icons.nature_people_outlined,
                 color: sensor.isOccupied ? Colors.greenAccent : AppTheme.textSecondary,
@@ -270,7 +290,7 @@ class _EnergyPresenceTabState extends State<EnergyPresenceTab> {
             ),
             subtitle: Text(
               'Floor ${sensor.floor}',
-              style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+              style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
             ),
             trailing: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -279,12 +299,22 @@ class _EnergyPresenceTabState extends State<EnergyPresenceTab> {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Indicador circular de ocupação
                     Container(
                       width: 8,
                       height: 8,
                       decoration: BoxDecoration(
                         color: sensor.isOccupied ? Colors.greenAccent : Colors.grey,
                         shape: BoxShape.circle,
+                        boxShadow: sensor.isOccupied
+                            ? [
+                                BoxShadow(
+                                  color: Colors.greenAccent.withOpacity(0.5),
+                                  blurRadius: 6,
+                                  spreadRadius: 1,
+                                )
+                              ]
+                            : [],
                       ),
                     ),
                     const SizedBox(width: 6),
@@ -301,7 +331,7 @@ class _EnergyPresenceTabState extends State<EnergyPresenceTab> {
                 const SizedBox(height: 4),
                 Text(
                   sensor.isOccupied ? context.translate('active_now') : '${context.translate('motion')}: $timeString',
-                  style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+                  style: const TextStyle(fontSize: 10, color: AppTheme.textMuted),
                 ),
               ],
             ),

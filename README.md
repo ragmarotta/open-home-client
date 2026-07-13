@@ -15,8 +15,8 @@ O ecossistema do aplicativo foi projetado com as seguintes tecnologias e pacotes
 *   **Equatable (`equatable`)**: Facilita a comparação de objetos Dart, otimizando o fluxo de renderização e evitando re-renderizações desnecessárias.
 *   **Flutter Localizations (`flutter_localizations`)**: Pacote nativo do SDK do Flutter integrado para suporte completo de i18n e formatação local.
 *   **Material Design 3**: UI moderna, fluida e consistente com as diretrizes do Material 3.
-*   **Tema Dark Nativo (OLED-friendly)**: Cores balanceadas para telas OLED, com contraste premium de Charcoal e Slate, e cores ativas em Indigo/Cyan.
-*   **Tamanho de Toques Mínimo (48dp)**: Todos os componentes interativos do aplicativo foram desenhados com área mínima de clique para melhor usabilidade e acessibilidade.
+*   **Tema Dark OLED-Friendly (Inspirado na Apple)**: Cores balanceadas para telas OLED (Preto absoluto `#08080C`), com contraste premium de grafites, e cores ativas em gradientes Indigo/Cyan.
+*   **Acessibilidade de Clique**: Todos os componentes interativos do aplicativo seguem uma área mínima de clique de `48x48dp` para melhor usabilidade e ergonomia.
 
 ---
 
@@ -38,6 +38,23 @@ lib/
     ├── blocs/               # Logica de estados (DeviceBloc, ClimateBloc, AudioBloc, MonitoringBloc, SettingsBloc)
     └── screens/             # Páginas da UI (Dashboard, RoomControl, AudioCentral, Climate, EnergyPresence, SettingsScreen)
 ```
+
+---
+
+## 🎨 Design UI/UX Premium (Apple HomeKit Style)
+
+O aplicativo passou por uma completa refatoração visual comandada por engenharia e design para atingir o nível máximo de polimento de mercado:
+
+*   **Containers e Cards Minimalistas**: Cantos muito bem arredondados (`BorderRadius.circular(24)`) e bordas extremamente finas de sutil realce (`Colors.white10`), com elevações planas.
+*   **Cromática Dinâmica de Estados**: Cartões de dispositivos mudam organicamente para gradientes vibrantes quando LIGADOS (Indigo ao Cyan com brilho difuso sutil) e retornam para o grafite profundo inativo (`#1C1C24`) quando DESLIGADOS.
+*   **Micro-Interações e Suavidade**:
+    *   **Transição de Andar**: Troca suave entre Andar 1 e Andar 2 utilizando `AnimatedSwitcher` (efeito conjunto de Fade e Slide).
+    *   **Transição de Estado**: Alteração no status de dispositivos ligar/desligar com animações implícitas (`AnimatedContainer`) para mudança orgânica e sem saltos de cor.
+    *   **Thermostat Crossfade**: Aparelhos de ar condicionado ligam/desligam utilizando `AnimatedCrossFade` para suavizar a entrada de painéis numéricos.
+*   **Sliders Espessos Estilo iOS**: Controles de Brilho e Volume espessos (`trackHeight: 14`), fáceis de arrastar e contendo botões redondos brancos flutuantes.
+*   **Ícones com Opacidade Dinâmica**: Na aba de Áudio, os mini-ícones de caixas de som variam a opacidade em tempo real baseados na intensidade selecionada do volume.
+*   **Status Térmico em Cápsula**: Widget compacto e elegante no topo do Dashboard centralizando as leituras climáticas do lar.
+*   **Medidores Lineares Suaves**: Barras de energia na aba de monitoramento com cantos totalmente circulares e cores distintas por fase.
 
 ---
 
